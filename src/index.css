@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* Import separated CSS files */
+@import "./css/dark-mode.css";
+@import "./css/utilities.css";
+@import "./css/animations.css";
+@import "./css/borders.css";
+@import "./css/patterns.css";
+@import "./css/3d-effects.css";
+@import "./css/landing.css";
+

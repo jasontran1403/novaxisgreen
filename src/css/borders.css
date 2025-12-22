@@ -1,0 +1,109 @@
+/* Class cho border phát sáng với animation đổi màu liên tục */
+.glow-border {
+  border-color: rgba(16, 185, 129, 0.9);
+  animation: colorShift 4s ease-in-out infinite;
+}
+
+/* Hiệu ứng glow cho border khi hover */
+.glow-border-hover {
+  border-color: rgba(16, 185, 129, 0.8);
+  transition: all 0.3s ease;
+}
+
+.glow-border-hover:hover {
+  border-color: rgba(16, 185, 129, 1);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.6),
+              0 0 30px rgba(16, 185, 129, 0.3),
+              inset 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.rotating-border {
+  position: relative;
+  border-radius: 9999px;
+  padding: 2px;
+}
+
+.rotating-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    var(--border-color, rgba(16, 185, 129, 0.8)),
+    transparent 30%,
+    transparent 70%,
+    var(--border-color, rgba(16, 185, 129, 0.8)),
+    transparent
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: rotate-border 3s linear infinite;
+  z-index: -1;
+}
+
+.rotating-border-green::before {
+  --border-color: rgba(34, 197, 94, 0.8);
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(34, 197, 94, 0.8),
+    transparent 30%,
+    transparent 70%,
+    rgba(34, 197, 94, 0.8),
+    transparent
+  );
+}
+
+.rotating-border-orange::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(249, 115, 22, 0.8),
+    transparent 30%,
+    transparent 70%,
+    rgba(249, 115, 22, 0.8),
+    transparent
+  );
+}
+
+.rotating-border-blue::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(59, 130, 246, 0.8),
+    transparent 30%,
+    transparent 70%,
+    rgba(59, 130, 246, 0.8),
+    transparent
+  );
+}
+
+.rotating-border-purple::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(168, 85, 247, 0.8),
+    transparent 30%,
+    transparent 70%,
+    rgba(168, 85, 247, 0.8),
+    transparent
+  );
+}
+
+.rotating-border-red::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(239, 68, 68, 0.8),
+    transparent 30%,
+    transparent 70%,
+    rgba(239, 68, 68, 0.8),
+    transparent
+  );
+}
+

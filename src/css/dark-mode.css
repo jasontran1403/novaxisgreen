@@ -1,0 +1,12 @@
+/* Dark mode configuration cho Tailwind CSS v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dark mode configuration - chỉ định rõ ràng để tránh browser tự động áp dụng */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+

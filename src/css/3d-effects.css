@@ -1,0 +1,62 @@
+/* Hiệu ứng 3D cho icon */
+.icon-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.icon-3d-container {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.icon-3d-container:hover {
+  transform: translateY(-5px) rotateX(5deg) rotateY(5deg);
+}
+
+.icon-3d-circle {
+  position: relative;
+  transform-style: preserve-3d;
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    0 5px 10px rgba(0, 0, 0, 0.2),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.icon-3d-circle::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.icon-3d-container:hover .icon-3d-circle {
+  box-shadow: 
+    0 15px 30px rgba(0, 0, 0, 0.4),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(255, 255, 255, 0.2);
+  transform: translateZ(10px);
+}
+
+.icon-3d-container:hover .icon-3d-circle::before {
+  opacity: 1;
+}
+
+.icon-3d-svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.icon-3d-container:hover .icon-3d-svg {
+  transform: translateZ(15px) scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
