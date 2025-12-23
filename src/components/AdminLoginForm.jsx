@@ -93,10 +93,11 @@ function AdminLoginForm() {
         : { username: formData.identifier, password: formData.password };
 
       // Call admin login API
-      const result = await api.post(API_ENDPOINTS.ADMIN.AUTH_LOGIN, loginData, false);
+      const result = await api.post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, loginData, false);
 
       if (result.success && result.data?.token) {
         // Save token and user info
+
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
           

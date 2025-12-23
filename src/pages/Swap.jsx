@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 import { useToast } from '../customHook/useToast';
 
 function Swap() {
-  const toast = useToast
+  const toast = useToast();
   const [usdtBalance, setUsdtBalance] = useState(0);
   const [novaBalance, setNovaBalance] = useState(0);
   const [swapAmount, setSwapAmount] = useState('');
@@ -157,6 +157,11 @@ function Swap() {
         amount: amount,
         fromCurrency: fromCurrency
       });
+
+      if (!res.success) {
+        toast.error(res.error || 'Swap failed');
+        return;
+      }
 
       setUsdtBalance(Number(res?.data?.balanceUSDT || 0));
       setNovaBalance(Number(res?.data?.balanceNOVA || 0));

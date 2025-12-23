@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../../config/apiConfig';
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatCurrency';
+import debounce from 'lodash.debounce'; // Cài lodash nếu chưa có: npm install lodash
+import { useToast } from '../../customHook/useToast';
 
 function MemberManagement() {
+  const toast = useToast();
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +18,7 @@ function MemberManagement() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  
+
   // Filters
   const [filters, setFilters] = useState({
     username: '',
@@ -31,9 +34,25 @@ function MemberManagement() {
   const [limit] = useState(20);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
 
+  // Debounce fetchMembers cho input tìm kiếm (1200ms)
+  const debouncedFetchMembers = useCallback(
+    debounce(() => {
+      fetchMembers();
+    }, 1200),
+    [filters, page]
+  );
+
+  useEffect(() => {
+    debouncedFetchMembers();
+    return () => {
+      debouncedFetchMembers.cancel(); // Cleanup debounce
+    };
+  }, [debouncedFetchMembers]);
+
+  // Gọi fetch ngay khi chuyển trang (không debounce)
   useEffect(() => {
     fetchMembers();
-  }, [page, filters]);
+  }, [page]);
 
   const fetchMembers = async () => {
     try {
@@ -43,16 +62,18 @@ function MemberManagement() {
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === null) delete params[key];
       });
-      
+
       const res = await api.get(API_ENDPOINTS.ADMIN.MEMBERS, { params });
+
       if (res.success) {
-        setMembers(res.data || []);
-        setPagination(res.pagination || { total: 0, totalPages: 0 });
+        setMembers(res.data?.data || []);
+        setPagination(res.data?.pagination || { total: 0, totalPages: 0 });
       } else {
         setError(res.error || 'Failed to load members');
       }
     } catch (err) {
       setError(err.message || 'Failed to load members');
+      console.error('Fetch members error:', err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +87,7 @@ function MemberManagement() {
         setShowDetailModal(true);
       }
     } catch (err) {
-      alert(err.message || 'Failed to load member detail');
+      toast.error(err.message || 'Failed to load member detail');
     }
   };
 
@@ -74,7 +95,7 @@ function MemberManagement() {
     try {
       const res = await api.post(API_ENDPOINTS.ADMIN.MEMBER_LOCK(memberId), lockData);
       if (res.success) {
-        alert('Lock status updated successfully');
+        toast.success('Lock status updated successfully');
         setShowLockModal(false);
         fetchMembers();
         if (selectedMember && selectedMember.id === memberId) {
@@ -82,7 +103,7 @@ function MemberManagement() {
         }
       }
     } catch (err) {
-      alert(err.message || 'Failed to update lock status');
+      toast.error(err.message || 'Failed to update lock status');
     }
   };
 
@@ -90,7 +111,7 @@ function MemberManagement() {
     try {
       const res = await api.put(API_ENDPOINTS.ADMIN.MEMBER_UPDATE(memberId), updateData);
       if (res.success) {
-        alert('Member updated successfully');
+        toast.success('Member updated successfully');
         setShowUpdateModal(false);
         fetchMembers();
         if (selectedMember && selectedMember.id === memberId) {
@@ -98,7 +119,7 @@ function MemberManagement() {
         }
       }
     } catch (err) {
-      alert(err.message || 'Failed to update member');
+      toast.error(err.message || 'Failed to update member');
     }
   };
 
@@ -106,14 +127,13 @@ function MemberManagement() {
     try {
       const res = await api.post(API_ENDPOINTS.ADMIN.MEMBER_IMPERSONATE(memberId));
       if (res.success && res.data?.token) {
-        // Lưu token impersonate và redirect
         localStorage.setItem('impersonate_token', res.data.token);
         localStorage.setItem('impersonate_user', JSON.stringify(res.data.user));
-        alert('Impersonation successful. Redirecting...');
+        toast.success('Impersonation successful. Redirecting...');
         window.location.href = '/dashboard';
       }
     } catch (err) {
-      alert(err.message || 'Failed to impersonate member');
+      toast.error(err.message || 'Failed to impersonate member');
     }
   };
 
@@ -121,7 +141,7 @@ function MemberManagement() {
     try {
       const res = await api.post(API_ENDPOINTS.ADMIN.MEMBER_BALANCE(memberId), balanceData);
       if (res.success) {
-        alert(res.message || 'Balance updated successfully');
+        toast.success(res.message || 'Balance updated successfully');
         setShowBalanceModal(false);
         fetchMembers();
         if (selectedMember && selectedMember.id === memberId) {
@@ -129,14 +149,13 @@ function MemberManagement() {
         }
       }
     } catch (err) {
-      alert(err.message || 'Failed to update balance');
+      toast.err(err.message || 'Failed to update balance');
     }
   };
 
   const handleExportCSV = async () => {
     try {
       const res = await api.get(API_ENDPOINTS.ADMIN.MEMBERS_EXPORT, { includeAuth: true });
-      // Tạo blob và download
       const blob = new Blob([res], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -147,7 +166,7 @@ function MemberManagement() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert(err.message || 'Failed to export CSV');
+      toast.error(err.message || 'Failed to export CSV');
     }
   };
 
@@ -220,7 +239,7 @@ function MemberManagement() {
           <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
             <div className="text-xs text-slate-400">Active Members</div>
             <div className="text-xl font-bold text-green-400">
-              {members.filter(m => m.isActive !== false).length}
+              {members.filter(m => m.active !== false).length}
             </div>
           </div>
           <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
@@ -248,7 +267,8 @@ function MemberManagement() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">ID</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Username</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Email</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">VIP</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Rank</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Leader VIP</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Investment</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Balance USDT</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Balance NOVA</th>
@@ -260,15 +280,15 @@ function MemberManagement() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">Loading...</td>
+                  <td colSpan="11" className="py-8 text-center text-slate-400">Loading...</td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-red-400">{error}</td>
+                  <td colSpan="11" className="py-8 text-center text-red-400">{error}</td>
                 </tr>
               ) : members.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-slate-400">No members found</td>
+                  <td colSpan="11" className="py-8 text-center text-slate-400">No members found</td>
                 </tr>
               ) : (
                 members.map((member) => (
@@ -279,12 +299,17 @@ function MemberManagement() {
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-300">{member.email || '--'}</td>
                     <td className="py-3 px-4 text-xs">
+                      <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">
+                        {member.vipLevelName || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-xs">
                       {member.vipLevel > 0 ? (
                         <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">
                           VIP {member.vipLevel}
                         </span>
                       ) : (
-                        <span className="text-slate-500">Member</span>
+                        <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400">--</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-400">
@@ -331,6 +356,7 @@ function MemberManagement() {
                             Xem chi tiết
                           </span>
                         </button>
+
                         <button
                           onClick={() => {
                             setSelectedMember(member);
@@ -347,6 +373,7 @@ function MemberManagement() {
                             Khóa/Mở khóa
                           </span>
                         </button>
+
                         <button
                           onClick={() => {
                             setSelectedMember(member);
@@ -363,6 +390,7 @@ function MemberManagement() {
                             Chỉnh sửa thông tin
                           </span>
                         </button>
+
                         <button
                           onClick={() => {
                             if (confirm('Bạn có chắc muốn đăng nhập thay người dùng này?')) {
@@ -378,8 +406,9 @@ function MemberManagement() {
                           <span className="text-[10px] font-medium hidden sm:inline">Đăng nhập</span>
                           <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
                             Đăng nhập thay người dùng
-                      </span>
+                          </span>
                         </button>
+
                         <button
                           onClick={() => {
                             setSelectedMember(member);
@@ -425,9 +454,9 @@ function MemberManagement() {
             >
               Next
             </button>
-                    </div>
-                    )}
-                  </div>
+          </div>
+        )}
+      </div>
 
       {/* Member Detail Modal */}
       {showDetailModal && selectedMember && (
@@ -485,8 +514,8 @@ function MemberManagement() {
                 <div>
                   <div className="text-slate-400 mb-2">Sponsor</div>
                   <div className="bg-slate-700/50 rounded p-2">
-                    <div className="text-emerald-400">{selectedMember.sponsor.username}</div>
-                    <div className="text-xs text-slate-400">{selectedMember.sponsor.email}</div>
+                    <div className="text-emerald-400">{selectedMember.sponsor.username || 'N/A'}</div>
+                    <div className="text-xs text-slate-400">{selectedMember.sponsor.email || '--'}</div>
                   </div>
                 </div>
               )}
@@ -545,9 +574,7 @@ function MemberManagement() {
         <LockStatusModal
           member={selectedMember}
           onClose={() => setShowLockModal(false)}
-          onSave={(lockData) => {
-            handleLockStatus(selectedMember.id, lockData);
-          }}
+          onSave={(lockData) => handleLockStatus(selectedMember.id, lockData)}
         />
       )}
 
@@ -556,9 +583,7 @@ function MemberManagement() {
         <UpdateMemberModal
           member={selectedMember}
           onClose={() => setShowUpdateModal(false)}
-          onSave={(updateData) => {
-            handleUpdateMember(selectedMember.id, updateData);
-          }}
+          onSave={(updateData) => handleUpdateMember(selectedMember.id, updateData)}
         />
       )}
 
@@ -567,28 +592,26 @@ function MemberManagement() {
         <UpdateBalanceModal
           member={selectedMember}
           onClose={() => setShowBalanceModal(false)}
-          onSave={(balanceData) => {
-            handleUpdateBalance(selectedMember.id, balanceData);
-          }}
+          onSave={(balanceData) => handleUpdateBalance(selectedMember.id, balanceData)}
         />
       )}
-                  </div>
+    </div>
   );
 }
 
 // Lock Status Modal Component
 function LockStatusModal({ member, onClose, onSave }) {
+  console.log(member);
   const [lockData, setLockData] = useState({
-    lockWithdraw: member.lockWithdraw || false,
-    lockTransfer: member.lockTransfer || false,
-    lockCommission: member.lockCommission || false,
-    lockSwap: member.lockSwap || false,
-    lockAccount: member.lockAccount || false,
-    lockDirectCommission: member.lockDirectCommission || false,
-    lockCompoundCommission: member.lockCompoundCommission || false,
-    lockBinaryCommission: member.lockBinaryCommission || false,
-    lockLeadershipCommission: member.lockLeadershipCommission || false,
-    lockDailyInterest: member.lockDailyInterest || false
+    lockWithdraw: member?.lockWithdraw || false,
+    lockTransfer: member?.lockTransfer || false,
+    lockSwap: member?.lockSwap || false,
+    lockDailyInterest: member?.lockDailyInterest || false,
+    lockDirectCommission: member?.lockDirectCommission || false,
+    lockBinaryCommission: member?.lockBinaryCommission || false,
+    lockLeaderCommission: member?.lockLeaderCommission || false,
+    lockPOPCommission: member?.lockPOPCommission || false,
+    lockAccount: member?.lockAccount || false,
   });
 
   return (
@@ -602,12 +625,14 @@ function LockStatusModal({ member, onClose, onSave }) {
               <input
                 type="checkbox"
                 checked={value}
-                onChange={(e) => setLockData(prev => ({ ...prev, [key]: e.target.checked }))}
+                onChange={(e) => {
+                  setLockData(prev => ({ ...prev, [key]: e.target.checked }));
+                }}
                 className="w-5 h-5"
               />
             </label>
           ))}
-                  </div>
+        </div>
         <div className="flex gap-2 mt-6">
           <button
             onClick={() => onSave(lockData)}
@@ -621,34 +646,30 @@ function LockStatusModal({ member, onClose, onSave }) {
           >
             Cancel
           </button>
-                  </div>
-                </div>
-              </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 // Update Member Modal Component
 function UpdateMemberModal({ member, onClose, onSave }) {
   const [updateData, setUpdateData] = useState({
-    name: member.name || '',
-    email: member.email || '',
+    name: member?.name || '',
+    email: member?.email || '',
     password: '',
     disable2FA: false,
-    capVip: member.capVip || ''
+    capVip: member?.capVip || ''
   });
   const [vipLevels, setVipLevels] = useState([]);
   const [loadingVipLevels, setLoadingVipLevels] = useState(true);
 
   useEffect(() => {
-    // Lấy danh sách VIP levels từ API commission settings
     const fetchVipLevels = async () => {
       try {
         const res = await api.get(API_ENDPOINTS.ADMIN.COMMISSION_VIP);
         if (res.success && res.data) {
-          // API trả về array vipRates với id và tenCap
           const levels = Array.isArray(res.data) ? res.data : [];
-          
-          // Format levels để có id và name
           const formattedLevels = levels.map(vip => ({
             id: vip.id,
             name: vip.tenCap || `VIP ${vip.id}`
@@ -657,7 +678,6 @@ function UpdateMemberModal({ member, onClose, onSave }) {
         }
       } catch (err) {
         console.error('Failed to load VIP levels:', err);
-        // Fallback: tạo danh sách VIP mặc định
         setVipLevels([
           { id: 1, name: 'VIP 1' },
           { id: 2, name: 'VIP 2' },
@@ -768,19 +788,15 @@ function UpdateBalanceModal({ member, onClose, onSave }) {
     reason: ''
   });
 
-  const currentBalance = balanceData.tokenSymbol === 'USDT' 
-    ? (member.balanceUSDT || 0) 
-    : (member.balanceNOVA || 0);
+  const currentBalance = balanceData.tokenSymbol === 'USDT'
+    ? (member?.balanceUSDT || 0)
+    : (member?.balanceNOVA || 0);
 
   const calculateNewBalance = () => {
     const amountNum = Number(balanceData.amount) || 0;
-    if (balanceData.operation === 'set') {
-      return amountNum;
-    } else if (balanceData.operation === 'add') {
-      return currentBalance + amountNum;
-    } else if (balanceData.operation === 'subtract') {
-      return Math.max(0, currentBalance - amountNum);
-    }
+    if (balanceData.operation === 'set') return amountNum;
+    if (balanceData.operation === 'add') return currentBalance + amountNum;
+    if (balanceData.operation === 'subtract') return Math.max(0, currentBalance - amountNum);
     return currentBalance;
   };
 
@@ -868,11 +884,11 @@ function UpdateBalanceModal({ member, onClose, onSave }) {
           <button
             onClick={() => {
               if (!balanceData.amount || Number(balanceData.amount) < 0) {
-                alert('Vui lòng nhập số tiền hợp lệ');
+                toast.warning('Vui lòng nhập số tiền hợp lệ');
                 return;
               }
               if (balanceData.operation === 'set' && Number(balanceData.amount) < 0) {
-                alert('Số dư không thể âm');
+                toast.warning('Số dư không thể âm');
                 return;
               }
               if (!window.confirm(`Bạn có chắc muốn ${balanceData.operation === 'add' ? 'thêm' : balanceData.operation === 'subtract' ? 'trừ' : 'đặt'} ${formatCurrency(Number(balanceData.amount), balanceData.tokenSymbol)} ${balanceData.tokenSymbol}?`)) {

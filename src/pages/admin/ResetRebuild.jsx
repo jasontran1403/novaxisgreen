@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { API_ENDPOINTS } from '../../config/apiConfig';
 import api from '../../services/api';
+import { useToast } from '../../customHook/useToast';
 
 function ResetRebuild() {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [recalcNovaLoading, setRecalcNovaLoading] = useState(false);
   const [progress, setProgress] = useState('');
@@ -40,25 +42,25 @@ function ResetRebuild() {
   };
 
   const handleRecalcNovaBalances = async () => {
-    if (!confirm('Chức năng này sẽ chỉ tính lại balance NOVA cho toàn bộ hệ thống từ lịch sử giao dịch.\nUSDT, hoa hồng và lãi sẽ không bị ảnh hưởng.\nBạn có chắc chắn muốn tiếp tục?')) {
+    if (!confirm('Chi trả lãi ngày, giai đoạn test, có thể trả trùng!')) {
       return;
     }
 
     try {
       setRecalcNovaLoading(true);
       setError('');
-      setProgress('Recalculating NOVA balances from history...');
+      setProgress('Server đang xử lý dữ liệu, chi trả sẽ chạy ngầm...');
 
-      const res = await api.post(API_ENDPOINTS.ADMIN.RECALC_NOVA_BALANCES);
+      const res = await api.get(API_ENDPOINTS.ADMIN.PAY_DAILY);
 
       if (res.success) {
         setResult(res.data);
-        setProgress('Recalculated NOVA balances successfully!');
+        setProgress('Server đang xử lý dữ liệu, chi trả sẽ chạy ngầm...');
       } else {
-        setError(res.error || 'Failed to recalculate NOVA balances');
+        setError(res.error || 'Failed to pay daily');
       }
     } catch (err) {
-      setError(err.message || 'Failed to recalculate NOVA balances');
+      setError(err.message || 'Failed to pay daily');
     } finally {
       setRecalcNovaLoading(false);
     }
@@ -132,15 +134,15 @@ function ResetRebuild() {
         </button>
 
         <div className="mt-3 sm:mt-4 border-t border-red-500/30 pt-3 sm:pt-4">
-          <h3 className="text-xs sm:text-sm font-semibold text-red-300 mb-2">
-            Hoặc chỉ tính lại Balance NOVA (không đụng USDT/hoa hồng)
+          <h3 className="text-[24px] font-semibold text-blue-300 mb-2">
+            Pay daily function
           </h3>
           <button
             onClick={handleRecalcNovaBalances}
             disabled={recalcNovaLoading}
-            className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
+            className="cursor-pointer w-full px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-orange-500/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
           >
-            {recalcNovaLoading ? 'Recalculating NOVA...' : 'Recalculate NOVA Balances Only'}
+            {recalcNovaLoading ? 'Paying...' : 'Pay Daily'}
           </button>
         </div>
       </div>

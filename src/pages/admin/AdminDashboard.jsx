@@ -83,14 +83,6 @@ function AdminDashboard() {
       borderColor: 'border-orange-500/50'
     },
     {
-      title: 'Total NOVA Wallets',
-      value: stats.totalNovaWallets || 0,
-      icon: '🔷',
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/20',
-      borderColor: 'border-purple-500/50'
-    },
-    {
       title: 'Total Admins',
       value: stats.totalAdmins || 0,
       icon: '👑',

@@ -138,11 +138,16 @@ function Transfer() {
     try {
       setLoading(true);
       setError('');
-      await ApiService.post(API_ENDPOINTS.USER.TRANSFER, {
+      const res = await ApiService.post(API_ENDPOINTS.USER.TRANSFER, {
         recipientUsername: recipientUsername.trim(),
         amount: transferAmount,
         tokenSymbol
       });
+
+      if (!res.success) {
+        toast.error(res.error || 'Transfer failed');
+        return;
+      }
 
       await fetchBalances();
       await fetchHistory();

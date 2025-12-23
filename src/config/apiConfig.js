@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   // Auth
   AUTH: {
     LOGIN: '/api/auth/login',
+    ADMIN_LOGIN: '/api/auth/admin-login',
     REGISTER: '/api/auth/register',
     ME: '/api/auth/me',
     LOGOUT: '/api/auth/logout',
@@ -74,9 +75,9 @@ export const API_ENDPOINTS = {
   // Admin
   ADMIN: {
     // Auth
-    AUTH_LOGIN: '/api/admin/auth/login',
-    AUTH_LOGOUT: '/api/admin/auth/logout',
-    AUTH_CHECK: '/api/admin/auth/check',
+    AUTH_LOGOUT: '/api/admin/logout',
+    AUTH_CHECK: '/api/admin/check',
+    PAY_DAILY: '/api/auth/pay-daily',
 
     // Dashboard
     DASHBOARD_STATS: '/api/admin/dashboard/stats',

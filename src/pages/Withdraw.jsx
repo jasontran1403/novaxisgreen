@@ -195,12 +195,17 @@ function Withdraw() {
 
     try {
       setLoadingSubmit(true);
-      await ApiService.post(API_ENDPOINTS.USER.WITHDRAW, {
+      const res = await ApiService.post(API_ENDPOINTS.USER.WITHDRAW, {
         address: withdrawAddress.trim(),
         tokenSymbol: token,
         amount: amount,
         walletSource: walletSource,
       });
+
+      if (!res.success) {
+        toast.error(res.error || 'Withdraw failed');
+        return;
+      }
 
       setWithdrawAddress('');
       setWithdrawAmount('');

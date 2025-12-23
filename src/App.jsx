@@ -64,13 +64,13 @@ const AdminRoute = ({ children }) => {
       </div>
     );
   }
-
+  
   if (!isAuthenticated) {
     window.location.href = '/admin/login';
     return null;
   }
 
-  const isAdmin = user?.isAdmin === true || user?.IsAdmin === true || user?.IsAdmin === 1;
+  const isAdmin = user?.role === "ADMIN";
 
   if (!isAdmin) {
     window.location.href = '/admin/login';

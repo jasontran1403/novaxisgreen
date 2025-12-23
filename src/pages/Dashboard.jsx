@@ -95,6 +95,7 @@ function Dashboard() {
   // Data cho các components
   const planData = statistics?.plan ? {
     userRank: statistics.plan.userRank || '—',
+    leaderRank: statistics.plan.leaderRank || '-',
     totalInvestment: statistics.plan.totalInvestment || 0,
     totalDirectMember: statistics.plan.totalDirectMember || 0,
     totalSalesFromDirect: statistics.plan.totalSalesFromDirect || 0,
