@@ -679,11 +679,15 @@ function UpdateMemberModal({ member, onClose, onSave }) {
       } catch (err) {
         console.error('Failed to load VIP levels:', err);
         setVipLevels([
-          { id: 1, name: 'VIP 1' },
-          { id: 2, name: 'VIP 2' },
-          { id: 3, name: 'VIP 3' },
-          { id: 4, name: 'VIP 4' },
-          { id: 5, name: 'VIP 5' }
+          { id: 1, name: 'Bronze' },
+          { id: 2, name: 'Silver' },
+          { id: 3, name: 'Gold' },
+          { id: 4, name: 'Platinum' },
+          { id: 5, name: 'Emerald' },
+          { id: 6, name: 'Sapphire' },
+          { id: 7, name: 'Ruby' },
+          { id: 8, name: 'Diamond' },
+          { id: 9, name: 'Crown Diamond' }
         ]);
       } finally {
         setLoadingVipLevels(false);
