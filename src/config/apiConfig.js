@@ -48,6 +48,11 @@ export const API_ENDPOINTS = {
     VALIDATE_USERNAME: (username) =>  `/api/user/validate/${username}`,
     VALIDATE_WALLET_ADDRESS: (walletAddress) => `/api/user/validate-address/${walletAddress}`,
     CREATE_DEPOSIT: "/api/user/create-deposit",
+    GET_DAILY_INTEREST: "/api/user/daily-interest",
+    GET_DIRECT_COMMISSION: '/api/user/direct-commission',
+    GET_BINARY_COMMISSION: '/api/user/binary-commission',
+    GET_LEADERSHIP_COMMISSION: '/api/user/leadership-commission',
+    GET_POP_COMMISSION: '/api/user/pop-commission',
   },
 
   // Income

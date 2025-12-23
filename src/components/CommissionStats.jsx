@@ -91,10 +91,6 @@ function CommissionStats({ commissions, currency = 'USDT' }) {
           const colors = colorClasses[stat.color];
 
           const handleClick = () => {
-            if (stat.label === 'Interest / Profit') {
-              navigate('/report/daily-interest');
-              return;
-            }
             if (stat.label === 'Direct Commission') {
               navigate('/report/direct-commission');
               return;
@@ -105,6 +101,10 @@ function CommissionStats({ commissions, currency = 'USDT' }) {
             }
             if (stat.label === 'Leadership Commission') {
               navigate('/report/leadership-commission');
+              return;
+            }
+            if (stat.label === 'POP Commission') {
+              navigate('/report/pop-commission');
               return;
             }
           };
@@ -130,7 +130,7 @@ function CommissionStats({ commissions, currency = 'USDT' }) {
                   </div>
                 </div>
                 <p className={`text-xl font-bold ${colors.text} group-hover:scale-105 transition-transform duration-200`}>
-                  {formatCurrency(stat.value, currency)}
+                  {formatCurrency(stat.value, "USDT")}
                 </p>
               </div>
             </div>

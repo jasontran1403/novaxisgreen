@@ -241,7 +241,7 @@ function App() {
               }
             />
             <Route
-              path="/report/profit-loss"
+              path="/report/pop-commission"
               element={
                 <ProtectedRoute>
                   <LayoutWrapper>

@@ -18,7 +18,7 @@ function InterestProfit() {
         setLoading(true);
         setError('');
         // Gọi API lãi/lãi (interest on interest) thay vì lãi hàng ngày
-        const res = await ApiService.get(API_ENDPOINTS.COMMISSION.GET_INTEREST_ON_INTEREST, {
+        const res = await ApiService.get(API_ENDPOINTS.USER.GET_POP_COMMISSION, {
           params: { page: currentPage, limit: 10 }
         });
         if (res?.success === false) {
@@ -62,17 +62,17 @@ function InterestProfit() {
               </p>
             </div>
             <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-4">
-              <svg 
-                className="w-12 h-12 text-emerald-400 dark:text-emerald-300" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-12 h-12 text-emerald-400 dark:text-emerald-300"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
             </div>
@@ -83,17 +83,17 @@ function InterestProfit() {
         <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-4 glow-border glow-border-hover">
           <div className="flex items-center gap-3 mb-4">
             <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-2">
-              <svg 
-                className="w-6 h-6 text-emerald-400 dark:text-emerald-300" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-6 h-6 text-emerald-400 dark:text-emerald-300"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
             </div>
@@ -166,13 +166,14 @@ function InterestProfit() {
                     className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
                   >
                     <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
-                      {item.date
-                        ? new Date(item.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                          })
-                        : '--'}
+                      {item.date ? new Date(item.date).toLocaleDateString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                      }) : '--'}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                       {item.member || '—'}
@@ -206,7 +207,7 @@ function InterestProfit() {
               </tbody>
             </table>
           </div>
-          
+
           {/* Pagination */}
           {!loading && !error && history.length > 0 && (
             <Pagination

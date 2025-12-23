@@ -16,11 +16,29 @@ function BinaryCommission() {
       try {
         setLoading(true);
         setError('');
-        const res = await ApiService.get(API_ENDPOINTS.COMMISSION.GET_BINARY);
+        const res = await ApiService.get(API_ENDPOINTS.USER.GET_BINARY_COMMISSION);
+        console.log('[BINARY_COMMISSION] Response:', res);
+
         const novaAmount = Number(res?.data?.totalCommission || 0);
         setTotalCommission(novaAmount);
-        setHistory(res?.data?.history || []);
+
+        // Safely map history data
+        const historyData = (res?.data?.history || []).map(item => ({
+          ...item,
+          id: item.id || Math.random(),
+          date: item.date || null,
+          username: item.username || 'Unknown',
+          investmentPackage: item.investmentPackage || 'N/A',
+          investmentPackagePrice: Number(item.investmentPackagePrice || 0),
+          commissionRate: Number(item.commissionRate || 0),
+          commissionAmount: Number(item.commissionAmount || 0),
+          status: item.status || 'Completed'
+        }));
+
+        console.log('[BINARY_COMMISSION] Processed history:', historyData);
+        setHistory(historyData);
       } catch (err) {
+        console.error('[BINARY_COMMISSION] Error:', err);
         setError(err.message || 'Failed to load binary commission');
       } finally {
         setLoading(false);
@@ -30,16 +48,43 @@ function BinaryCommission() {
     fetchData();
   }, []);
 
+  // Safe currency formatter
+  const safeCurrencyFormat = (amount, currency = 'NOVA') => {
+    try {
+      if (amount == null || isNaN(amount)) return '0.00 ' + currency;
+      return formatCurrency(amount, currency);
+    } catch (e) {
+      console.error('[CURRENCY_FORMAT] Error:', e, { amount, currency });
+      return `${Number(amount).toFixed(2)} ${currency}`;
+    }
+  };
+
   const filteredData = history.filter(item => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (item.date || '').toLowerCase().includes(searchLower) ||
-      (item.username || '').toLowerCase().includes(searchLower) ||
-      (item.investmentPackage || '').toLowerCase().includes(searchLower) ||
-      item.investmentPackagePrice?.toString().includes(searchLower) ||
-      item.commissionAmount?.toString().includes(searchLower) ||
-      item.commissionRate?.toString().includes(searchLower)
-    );
+    try {
+      if (!searchTerm) return true; // No search term = show all
+
+      const searchLower = searchTerm.toLowerCase();
+
+      // Convert all values to string before toLowerCase
+      const dateStr = String(item.date || '');
+      const usernameStr = String(item.username || '');
+      const packageStr = String(item.investmentPackage || '');
+      const priceStr = String(item.investmentPackagePrice || '');
+      const amountStr = String(item.commissionAmount || '');
+      const rateStr = String(item.commissionRate || '');
+
+      return (
+        dateStr.toLowerCase().includes(searchLower) ||
+        usernameStr.toLowerCase().includes(searchLower) ||
+        packageStr.toLowerCase().includes(searchLower) ||
+        priceStr.includes(searchLower) ||
+        amountStr.includes(searchLower) ||
+        rateStr.includes(searchLower)
+      );
+    } catch (e) {
+      console.error('[FILTER] Error filtering item:', e, item);
+      return true; // Include item if filter fails
+    }
   });
 
   return (
@@ -53,21 +98,21 @@ function BinaryCommission() {
                 Total Binary Commission Received
               </h2>
               <p className="text-3xl font-bold text-emerald-300 dark:text-emerald-200">
-                {formatCurrency(totalCommission, 'NOVA')}
+                {safeCurrencyFormat(totalCommission, 'USDT')}
               </p>
             </div>
             <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-4">
-              <svg 
-                className="w-12 h-12 text-emerald-400 dark:text-emerald-300" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-12 h-12 text-emerald-400 dark:text-emerald-300"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
             </div>
@@ -79,7 +124,7 @@ function BinaryCommission() {
           <h3 className="text-sm font-semibold text-emerald-400 dark:text-emerald-300 mb-3">
             Binary Commission History
           </h3>
-          
+
           {/* Search and Filter Bar */}
           <div className="mb-4 flex gap-2">
             <input
@@ -115,9 +160,6 @@ function BinaryCommission() {
                     Username
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Investment Package
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
                     Commission Rate (%)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
@@ -142,47 +184,51 @@ function BinaryCommission() {
                     </td>
                   </tr>
                 ) : filteredData.length > 0 ? (
-                  filteredData.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
-                    >
-                      <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
-                        {item.date ? (() => {
-                          const date = new Date(item.date);
-                          // Format UTC date: MM/DD/YYYY - HH:mm
-                          const year = date.getUTCFullYear();
-                          const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                          const day = String(date.getUTCDate()).padStart(2, '0');
-                          const hours = String(date.getUTCHours()).padStart(2, '0');
-                          const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-                          return `${month}/${day}/${year} - ${hours}:${minutes}`;
-                        })() : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.username || '--'}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.investmentPackage || 'N/A'}
-                        {item.investmentPackagePrice > 0 && (
-                          <span className="ml-2 text-emerald-400/60 dark:text-emerald-400/60">
-                            ({formatCurrency(item.investmentPackagePrice, 'NOVA')})
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {(item.commissionRate ?? 0).toFixed(2)}%
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                        +{formatCurrency(item.commissionAmount || 0, 'NOVA')}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300">
-                          {item.status || 'Completed'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+                  filteredData.map((item, index) => {
+                    try {
+                      return (
+                        <tr
+                          key={item.id || index}
+                          className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
+                        >
+                          <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
+                            {item.date ? new Date(item.date).toLocaleDateString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                            }) : '--'}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
+                            {item.username || '--'}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
+                            {Number(item.commissionRate || 0).toFixed(2)}%
+                          </td>
+                          <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
+                            <div className="">+{safeCurrencyFormat(item.commissionAmount || 0, 'NOVA')}</div>
+                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300">
+                              {item.status || 'Completed'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    } catch (rowError) {
+                      console.error('[ROW_RENDER] Error rendering row:', rowError, item);
+                      return (
+                        <tr key={index}>
+                          <td colSpan="6" className="py-3 px-4 text-xs text-red-400">
+                            Error rendering row {index + 1}
+                          </td>
+                        </tr>
+                      );
+                    }
+                  })
                 ) : (
                   <tr>
                     <td colSpan="6" className="py-8 text-center text-xs text-emerald-400/50 dark:text-emerald-400/50">
@@ -200,4 +246,3 @@ function BinaryCommission() {
 }
 
 export default BinaryCommission;
-

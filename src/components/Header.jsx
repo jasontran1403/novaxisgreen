@@ -69,7 +69,7 @@ const Header = ({ userName = 'User' }) => {
     { name: 'Direct Commission', path: '/report/direct-commission' },
     { name: 'Binary Commission', path: '/report/binary-commission' },
     { name: 'Leadership Commission', path: '/report/leadership-commission' },
-    { name: 'POP', path: '/report/profit-loss' },
+    { name: 'POP', path: '/report/pop-commission' },
   ];
 
   const navItems = [

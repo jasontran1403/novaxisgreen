@@ -35,19 +35,19 @@ function BalanceSection({ balance, commissions, loading = false }) {
         { label: `≈ ${formatCurrency(novaValueInUsdt, 'USDT')}`}
       ]
     },
+    // {
+    //   label: 'Daily Interest Balance',
+    //   value: formatCurrency(dailyBalance, balance?.currency || 'USDT'),
+    //   color: 'blue',
+    //   icon: (
+    //     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    //     </svg>
+    //   )
+    // },
     {
-      label: 'Daily Interest Balance',
-      value: formatCurrency(dailyBalance, balance?.currency || 'USDT'),
-      color: 'blue',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      label: 'Total Commission',
-      value: formatCurrency(totalCommission, balance?.currency || 'USDT'),
+      label: 'Total Income',
+      value: formatCurrency(dailyBalance + totalCommission, balance?.incomeCurrency || 'USDT'),
       color: 'emerald',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +55,8 @@ function BalanceSection({ balance, commissions, loading = false }) {
         </svg>
       ),
       subLines: [
-        { label: 'Binary + Override + Leader + POP', value: '' }
+        { label: 'Daily Interest', value: formatCurrency(dailyBalance, balance?.incomeCurrency || 'USDT') },
+        { label: 'Total Commissions', value: formatCurrency(totalCommission, balance?.incomeCurrency || 'USDT') }
       ]
     }
   ];
@@ -114,12 +115,8 @@ function BalanceSection({ balance, commissions, loading = false }) {
               navigate('/deposit?token=NOVA');
               return;
             }
-            if (card.label === 'Daily Interest Balance') {
+            if (card.label === 'Total Income') {
               navigate('/report/daily-interest');
-              return;
-            }
-            if (card.label === 'Total Commission') {
-              navigate('/report/commissions');
               return;
             }
           };

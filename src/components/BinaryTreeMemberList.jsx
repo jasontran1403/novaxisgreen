@@ -12,15 +12,17 @@ function BinaryTreeMemberList() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [showRefModal, setShowRefModal] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+  const [leftRef, setLeftRef] = useState('');
+  const [rightRef, setRightRef] = useState('');
 
   const buildRefLinks = () => {
     const baseUrl = window.location.origin;
-    const username = user?.username || user?.email?.split('@')[0] || '';
-    const refCode = username ? `&ref=${encodeURIComponent(username)}` : '';
+
+    console.log({leftRef, rightRef});
 
     return {
-      left: `${baseUrl}/register?position=left${refCode}`,
-      right: `${baseUrl}/register?position=right${refCode}`
+      left: `${baseUrl}/register?ref=${leftRef}`,
+      right: `${baseUrl}/register?ref=${rightRef}`
     };
   };
 
@@ -61,7 +63,8 @@ function BinaryTreeMemberList() {
           const data = response.data || [];
           
           console.log('[FETCH_MEMBERS] Loaded', data.length, 'members');
-          
+          setLeftRef(response.leftRef);
+          setRightRef(response.rightRef);
           setMembers(data);
         } else {
           setError(response.error || 'Cannot load member list');

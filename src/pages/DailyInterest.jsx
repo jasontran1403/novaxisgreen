@@ -16,7 +16,7 @@ function DailyInterest() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await api.get(API_ENDPOINTS.COMMISSION.GET_DAILY_INTEREST, {
+        const res = await api.get(API_ENDPOINTS.USER.GET_DAILY_INTEREST, {
           params: { page: currentPage, limit: pagination.limit }
         });
         if (res?.success) {
@@ -64,17 +64,17 @@ function DailyInterest() {
               </p>
             </div>
             <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-4">
-              <svg 
-                className="w-12 h-12 text-emerald-400 dark:text-emerald-300" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-12 h-12 text-emerald-400 dark:text-emerald-300"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             </div>
@@ -107,63 +107,65 @@ function DailyInterest() {
                   </th>
                 </tr>
               </thead>
-                  <tbody>
-                    {loading && (
-                      <tr>
-                        <td colSpan={5} className="py-4 px-4 text-center text-xs text-emerald-300/80">
-                          Loading data...
-                        </td>
-                      </tr>
-                    )}
-                    {!loading && error && (
-                      <tr>
-                        <td colSpan={5} className="py-4 px-4 text-center text-xs text-red-300">
-                          {error}
-                        </td>
-                      </tr>
-                    )}
-                    {!loading && !error && dailyInterestHistory.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="py-4 px-4 text-center text-xs text-emerald-300/80">
-                          No daily interest data available.
-                        </td>
-                      </tr>
-                    )}
-                    {!loading && !error && dailyInterestHistory.map((item) => (
-                      <tr
-                        key={item.id}
-                        className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={5} className="py-4 px-4 text-center text-xs text-emerald-300/80">
+                      Loading data...
+                    </td>
+                  </tr>
+                )}
+                {!loading && error && (
+                  <tr>
+                    <td colSpan={5} className="py-4 px-4 text-center text-xs text-red-300">
+                      {error}
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && dailyInterestHistory.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-4 px-4 text-center text-xs text-emerald-300/80">
+                      No daily interest data available.
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && dailyInterestHistory.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
+                  >
+                    <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
+                      {item.date ? new Date(item.date).toLocaleDateString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                      }) : '--'}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
+                      {formatCurrency(item.investmentAmount || item.investment || 0, 'USDT')}
+                    </td>
+                    <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
+                      +{formatCurrency(item.interest || item.amount || 0, 'USDT')}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
+                      {item.rate ?? item.percentage ?? 0}%
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${(item.status || 'completed') === 'completed'
+                            ? 'bg-green-500/20 text-green-400 dark:text-green-300'
+                            : 'bg-yellow-500/20 text-yellow-400 dark:text-yellow-300'
+                          }`}
                       >
-                        <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
-                          {new Date(item.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                          })}
-                        </td>
-                        <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                          {formatCurrency(item.investmentAmount || item.investment || 0, 'USDT')}
-                        </td>
-                        <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                          +{formatCurrency(item.interest || item.amount || 0, 'USDT')}
-                        </td>
-                        <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                          {item.rate ?? item.percentage ?? 0}%
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`text-xs px-2 py-1 rounded ${
-                              (item.status || 'completed') === 'completed'
-                                ? 'bg-green-500/20 text-green-400 dark:text-green-300'
-                                : 'bg-yellow-500/20 text-yellow-400 dark:text-yellow-300'
-                            }`}
-                          >
-                            {(item.status || 'completed') === 'completed' ? 'Completed' : 'Processing'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        {(item.status || 'completed') === 'completed' ? 'Completed' : 'Processing'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
 

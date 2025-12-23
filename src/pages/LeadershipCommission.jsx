@@ -14,10 +14,10 @@ function LeadershipCommission() {
       try {
         setLoading(true);
         setError('');
-        
+
         // API GET only fetches leadership commission data from database
         // Leadership commission is calculated automatically when binary commission is generated
-        const res = await ApiService.get(API_ENDPOINTS.COMMISSION.GET_LEADERSHIP);
+        const res = await ApiService.get(API_ENDPOINTS.USER.GET_LEADERSHIP_COMMISSION);
         const novaAmount = Number(res?.data?.totalCommission || 0);
         setTotalCommission(novaAmount);
         const historyData = (res?.data?.history || []).map(item => ({
@@ -47,21 +47,21 @@ function LeadershipCommission() {
                 Total Leadership Commission Received
               </h2>
               <p className="text-3xl font-bold text-emerald-300 dark:text-emerald-200">
-                {formatCurrency(totalCommission, 'NOVA')}
+                {formatCurrency(totalCommission, 'USDT')}
               </p>
             </div>
             <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-4">
-              <svg 
-                className="w-12 h-12 text-emerald-400 dark:text-emerald-300" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-12 h-12 text-emerald-400 dark:text-emerald-300"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
                 />
               </svg>
             </div>
@@ -84,10 +84,13 @@ function LeadershipCommission() {
                     Member
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Sales Volume (NOVA)
+                    Package Price (USDT)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
                     Commission Amount (NOVA)
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -118,19 +121,30 @@ function LeadershipCommission() {
                     >
                       <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
                         {item.date ? new Date(item.date).toLocaleDateString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
                           year: 'numeric',
                           month: '2-digit',
-                          day: '2-digit'
+                          day: '2-digit',
                         }) : '--'}
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                         {item.member || '--'}
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {formatCurrency(item.salesVolume || 0, 'NOVA')}
+                        {formatCurrency(item.salesVolume || 0, 'USDT')}
                       </td>
                       <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                        +{formatCurrency(item.commission || 0, 'NOVA')}
+                        <div className="">+{formatCurrency(item.commission || 0, 'NOVA')}</div>
+                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300`}
+                        >
+                          {'Completed'}
+                        </span>
                       </td>
                     </tr>
                   ))
