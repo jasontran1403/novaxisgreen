@@ -137,7 +137,7 @@ function Invest() {
       const data = await api.get(API_ENDPOINTS.USER.GET_PACKAGES, { params: { currency: 'USDT' } });
       if (data?.success === false) return;
 
-      setNovaPrice(data.price || 0); // Đảm bảo có giá trị
+      setNovaPrice(data.price || 0);
 
       const items = (data?.data || []).map(pkg => ({
         ...pkg,
@@ -178,7 +178,6 @@ function Invest() {
     fetchHistory(historyPage);
   }, [fetchBalances, fetchPackages, fetchHistory, historyPage]);
 
-  // Hàm helper tính required amount dựa trên currency
   const getRequiredAmount = (currency) => {
     const usdPrice = selectedPackage?.price || 0;
     if (currency === 'USDT') return usdPrice;
@@ -214,50 +213,34 @@ function Invest() {
           ))}
         </div>
 
+        {/* Investment Packages */}
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-2">
-              <svg
-                className="w-6 h-6 text-emerald-400 dark:text-emerald-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
+            <div className="bg-emerald-500/20 rounded-full p-2">
+              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-              Investment Packages
-            </h2>
+            <h2 className="text-lg font-semibold text-emerald-400 uppercase">Investment Packages</h2>
           </div>
 
           {packagesLoading ? (
-            <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-6 glow-border">
-              <div className="text-center text-emerald-300/80 dark:text-emerald-400/80">
-                Loading packages...
-              </div>
+            <div className="bg-slate-700/50 rounded-lg border border-emerald-500/50 p-6 glow-border text-center text-emerald-300/80">
+              Loading packages...
             </div>
           ) : packages.length === 0 ? (
-            <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-6 glow-border">
-              <div className="text-center text-emerald-300/80 dark:text-emerald-400/80">
-                No packages available.
-              </div>
+            <div className="bg-slate-700/50 rounded-lg border border-emerald-500/50 p-6 glow-border text-center text-emerald-300/80">
+              No packages available.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {packages.map((pkg) => {
                 const colors = getColorClasses(pkg.color);
-                const hasEnoughBalance = usdtBalance >= pkg.price;
 
                 return (
                   <div
                     key={pkg.id}
-                    className={`bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border ${colors.border} p-6 glow-border glow-border-hover transition-all hover:shadow-lg`}
+                    className={`bg-slate-700/50 rounded-lg border ${colors.border} p-6 glow-border glow-border-hover transition-all hover:shadow-lg`}
                   >
                     {/* Package Header */}
                     <div className="flex items-center justify-between mb-4">
@@ -298,21 +281,10 @@ function Invest() {
                       </p>
                     )}
 
-                    {/* Balance Warning */}
-                    {!hasEnoughBalance && (
-                      <p className="text-xs text-red-400 dark:text-red-300 mb-4">
-                        ⚠️ Insufficient balance
-                      </p>
-                    )}
-
-                    {/* Invest Button */}
+                    {/* Invest Button - LUÔN ACTIVE */}
                     <button
                       onClick={() => handleInvestClick(pkg)}
-                      disabled={!hasEnoughBalance}
-                      className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${hasEnoughBalance
-                        ? `${colors.button} text-white dark:text-gray-900`
-                        : 'bg-slate-600/50 text-emerald-300/50 dark:bg-gray-700/50 dark:text-emerald-400/50 cursor-not-allowed'
-                        }`}
+                      className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${colors.button} text-white`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -327,7 +299,7 @@ function Invest() {
                           d="M12 4v16m8-8H4"
                         />
                       </svg>
-                      {!hasEnoughBalance ? 'Insufficient Balance' : 'Invest Now'}
+                      Invest Now
                     </button>
                   </div>
                 );
@@ -339,9 +311,9 @@ function Invest() {
         {/* Investment History */}
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full p-2">
+            <div className="bg-emerald-500/20 rounded-full p-2">
               <svg
-                className="w-6 h-6 text-emerald-400 dark:text-emerald-300"
+                className="w-6 h-6 text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -354,22 +326,22 @@ function Invest() {
                 />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
+            <h2 className="text-lg font-semibold text-emerald-400 uppercase">
               Investment History
             </h2>
           </div>
 
-          <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-4 glow-border glow-border-hover">
+          <div className="bg-slate-700/50 rounded-lg border border-emerald-500/50 p-4 glow-border glow-border-hover">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-emerald-500/30 dark:border-emerald-400/30">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Date</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Package</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Amount</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Term</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Rate (/day)</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">Status</th>
+                  <tr className="border-b border-emerald-500/30">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Package</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Amount</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Term</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Rate (/day)</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,68 +369,44 @@ function Invest() {
                   {!historyLoading && !historyError && history.map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
+                      className="border-b border-emerald-500/10 hover:bg-emerald-500/5 transition-colors"
                     >
-                      <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
+                      <td className="py-3 px-4 text-xs text-emerald-300/80">
                         {(() => {
                           const timestamp = Number(item.startDate || item.startDate);
                           if (isNaN(timestamp) || timestamp <= 0) {
                             return <span className="text-red-400">Invalid Date</span>;
                           }
                           const date = new Date(timestamp);
-
                           if (isNaN(date.getTime())) {
                             return <span className="text-red-400">Invalid Date</span>;
                           }
-
                           return (
-                            <div className="text-xs text-emerald-300/80 whitespace-nowrap">
+                            <div className="whitespace-nowrap">
                               <div className="font-medium">
-                                {date.toLocaleTimeString('en-GB', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  second: '2-digit',
-                                })}
+                                {date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                               </div>
                               <div className="text-emerald-300/60">
-                                {date.toLocaleDateString('en-GB', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                })}
+                                {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                               </div>
                             </div>
                           );
                         })()}
                       </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.packageName || 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                        {formatCurrency(item.amount || 0, 'USDT')}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.termMonths ? `${item.termMonths} months` : '--'}
-                      </td>
-                      <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.dailyRate ? `${Number(item.dailyRate).toFixed(2)}%` : '--'}
-                      </td>
+                      <td className="py-3 px-4 text-xs text-emerald-300/80">{item.packageName || 'N/A'}</td>
+                      <td className="py-3 px-4 text-xs font-medium text-green-400">{formatCurrency(item.amount || 0, 'USDT')}</td>
+                      <td className="py-3 px-4 text-xs text-emerald-300/80">{item.termMonths ? `${item.termMonths} months` : '--'}</td>
+                      <td className="py-3 px-4 text-xs text-emerald-300/80">{item.dailyRate ? `${Number(item.dailyRate).toFixed(2)}%` : '--'}</td>
                       <td className="py-3 px-4">
-                        {(() => {
-                          const normalizedStatus = (item.status || '').toString().trim().toLowerCase();
-                          const isActive = normalizedStatus.includes('active')
-                          const label = isActive ? 'Active' : item.status || 'Active';
-                          return (
-                            <span
-                              className={`text-xs px-2 py-1 rounded ${isActive
-                                ? 'bg-green-500/20 text-green-400 dark:text-green-300'
-                                : 'bg-yellow-500/20 text-yellow-400 dark:text-yellow-300'
-                                }`}
-                            >
-                              {label}
-                            </span>
-                          );
-                        })()}
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            (item.status || '').toLowerCase().includes('active')
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}
+                        >
+                          {(item.status || 'Active').trim()}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -466,7 +414,6 @@ function Invest() {
               </table>
             </div>
 
-            {/* Pagination */}
             {!historyLoading && !historyError && history.length > 0 && (
               <Pagination
                 currentPage={historyPagination.page}
@@ -484,134 +431,131 @@ function Invest() {
       </div>
 
       {/* Modal Confirm Investment */}
-      {
-        showModal && selectedPackage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-slate-700 dark:bg-gray-800 rounded-lg border border-emerald-500/50 p-6 w-full max-w-md glow-border">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-semibold text-emerald-400">Confirm Investment</h3>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSelectedPackage(null);
+      {showModal && selectedPackage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-700 dark:bg-gray-800 rounded-lg border border-emerald-500/50 p-6 w-full max-w-md glow-border">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-xl font-semibold text-emerald-400">Confirm Investment</h3>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedPackage(null);
+                }}
+                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-sm text-emerald-300/80 mb-1">Package</p>
+                <p className="font-semibold text-emerald-400">{selectedPackage.name}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm text-emerald-300/80 mb-2">Investment Term</label>
+                <select
+                  value={selectedModalTermMonths}
+                  onChange={(e) => setSelectedModalTermMonths(Number(e.target.value))}
+                  className="w-full px-4 py-3 bg-slate-600/60 border border-emerald-500/50 rounded-lg text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2334d399'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundPosition: 'right 1rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.3em',
+                    paddingRight: '2.5rem'
                   }}
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  {INVESTMENT_TERMS.map((term) => (
+                    <option key={term.months} value={term.months} className="bg-slate-800 text-emerald-300">
+                      {term.months} months ({term.dailyRate}% daily)
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="space-y-4 mb-6">
-                <div>
-                  <p className="text-sm text-emerald-300/80 mb-1">Package</p>
-                  <p className="font-semibold text-emerald-400">{selectedPackage.name}</p>
-                </div>
-
-                {/* Investment Term */}
-                <div>
-                  <label className="block text-sm text-emerald-300/80 mb-2">Investment Term</label>
-                  <select
-                    value={selectedModalTermMonths}
-                    onChange={(e) => setSelectedModalTermMonths(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-slate-600/60 border border-emerald-500/50 rounded-lg text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2334d399'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundPosition: 'right 1rem center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1.3em',
-                      paddingRight: '2.5rem'
-                    }}
-                  >
-                    {INVESTMENT_TERMS.map((term) => (
-                      <option key={term.months} value={term.months} className="bg-slate-800 text-emerald-300">
-                        {term.months} months ({term.dailyRate}% daily)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Amount - Hiển thị số lượng cần trả theo currency đã chọn */}
-                <div>
-                  <p className="text-sm text-emerald-300/80 mb-1">Amount to Pay</p>
-                  <p className="font-semibold text-emerald-400">
-                    {selectedCurrency === 'USDT'
-                      ? formatCurrency(requiredAmount, 'USDT')
-                      : `${requiredAmount.toFixed(2)} NOVA`}
+              <div>
+                <p className="text-sm text-emerald-300/80 mb-1">Amount to Pay</p>
+                <p className="font-semibold text-emerald-400">
+                  {selectedCurrency === 'USDT'
+                    ? formatCurrency(requiredAmount, 'USDT')
+                    : `${requiredAmount.toFixed(2)} NOVA`}
+                </p>
+                {selectedCurrency === 'NOVA' && novaPrice > 0 && (
+                  <p className="text-xs text-emerald-300/70 mt-1">
+                    ≈ {formatCurrency(selectedPackage.price, 'USDT')} USDT (1 NOVA = {formatCurrency(novaPrice, 'USDT')})
                   </p>
-                  {selectedCurrency === 'NOVA' && novaPrice > 0 && (
-                    <p className="text-xs text-emerald-300/70 mt-1">
-                      ≈ {formatCurrency(selectedPackage.price, 'USDT')} USDT (1 NOVA = {formatCurrency(novaPrice, 'USDT')})
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
+            </div>
 
-              {/* Currency selection */}
-              <div className="mb-6">
-                <label className="block text-sm text-emerald-300/80 mb-2">Payment Wallet</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {['USDT', 'NOVA'].map((cur) => {
-                    const isUsdt = cur === 'USDT';
-                    const balance = isUsdt ? usdtBalance : novaBalance;
-                    const required = getRequiredAmount(cur);
-                    const hasEnough = balance >= required;
+            <div className="mb-6">
+              <label className="block text-sm text-emerald-300/80 mb-2">Payment Wallet</label>
+              <div className="grid grid-cols-2 gap-3">
+                {['USDT', 'NOVA'].map((cur) => {
+                  const isUsdt = cur === 'USDT';
+                  const balance = isUsdt ? usdtBalance : novaBalance;
+                  const required = getRequiredAmount(cur);
+                  const hasEnough = balance >= required;
 
-                    return (
-                      <button
-                        key={cur}
-                        type="button"
-                        onClick={() => setSelectedCurrency(cur)}
-                        disabled={!hasEnough || (cur === 'NOVA' && novaPrice <= 0)}
-                        className={`p-4 rounded-lg border-2 text-center transition-all ${selectedCurrency === cur
+                  return (
+                    <button
+                      key={cur}
+                      type="button"
+                      onClick={() => setSelectedCurrency(cur)}
+                      disabled={!hasEnough || (cur === 'NOVA' && novaPrice <= 0)}
+                      className={`p-4 rounded-lg border-2 text-center transition-all ${
+                        selectedCurrency === cur
                           ? 'border-emerald-500 bg-emerald-500/20'
                           : hasEnough
                             ? 'border-emerald-500/40 hover:border-emerald-500/60 bg-slate-600/40'
                             : 'border-red-500/40 bg-red-500/10 cursor-not-allowed opacity-70'
-                          }`}
-                      >
-                        <div className="font-semibold">{cur} Wallet</div>
-                        <div className="text-sm mt-1">
-                          {formatCurrency(balance, cur)}
-                          {!hasEnough && (
-                            <span className="text-red-400 block mt-1 text-xs">
-                              Need {required.toFixed(cur === 'USDT' ? 2 : 2)} {cur}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSelectedPackage(null);
-                  }}
-                  className="flex-1 py-3 px-4 bg-slate-600 hover:bg-slate-500 text-emerald-300 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmInvest}
-                  disabled={investing || requiredAmount > (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${!investing && requiredAmount <= (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                    : 'bg-slate-700 text-gray-500 cursor-not-allowed'
-                    }`}
-                >
-                  {investing ? 'Processing...' : 'Confirm & Invest'}
-                </button>
+                      }`}
+                    >
+                      <div className="font-semibold">{cur} Wallet</div>
+                      <div className="text-sm mt-1">
+                        {formatCurrency(balance, cur)}
+                        {!hasEnough && (
+                          <span className="text-red-400 block mt-1 text-xs">
+                            Need {required.toFixed(cur === 'USDT' ? 2 : 2)} {cur}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedPackage(null);
+                }}
+                className="flex-1 py-3 px-4 bg-slate-600 hover:bg-slate-500 text-emerald-300 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmInvest}
+                disabled={investing || requiredAmount > (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)}
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
+                  !investing && requiredAmount <= (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                    : 'bg-slate-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {investing ? 'Processing...' : 'Confirm & Invest'}
+              </button>
+            </div>
           </div>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }
 
