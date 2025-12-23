@@ -54,7 +54,7 @@ function Invest() {
   const handleConfirmInvest = async () => {
     const term = INVESTMENT_TERMS.find(t => t.months === selectedModalTermMonths);
     if (!term) {
-      toast.error('Vui lòng chọn thời hạn đầu tư');
+      toast.error('Please select an investment term');
       return;
     }
 
@@ -64,12 +64,12 @@ function Invest() {
 
     const balance = isUsdt ? usdtBalance : novaBalance;
     if (balance < requiredAmount) {
-      toast.error(`Số dư ${selectedCurrency} không đủ (${requiredAmount.toFixed(2)} ${selectedCurrency} required)`);
+      toast.error(`Balance ${selectedCurrency} insufficient (${requiredAmount.toFixed(2)} ${selectedCurrency} required)`);
       return;
     }
 
     if (!isUsdt && novaPrice <= 0) {
-      toast.error('Không thể đầu tư bằng NOVA lúc này (giá NOVA không khả dụng)');
+      toast.error('Cant invest right now (NOVA price unavailable)');
       return;
     }
 
@@ -87,16 +87,16 @@ function Invest() {
 
       const res = await api.post(API_ENDPOINTS.USER.INVEST, payload);
       if (res?.success === false) {
-        throw new Error(res?.message || 'Đầu tư thất bại');
+        throw new Error(res?.message || 'Invest failed');
       }
 
       await Promise.all([fetchBalances(), fetchHistory()]);
 
       setShowModal(false);
       setSelectedPackage(null);
-      toast.success(`Đầu tư thành công vào gói ${selectedPackage.name} - ${term.months} tháng`);
+      toast.success(`Invested successfully in package ${selectedPackage.name} - ${term.months} months`);
     } catch (error) {
-      toast.error(error?.message || 'Đầu tư thất bại');
+      toast.error(error?.message || 'Invest failed');
     } finally {
       setInvesting(false);
     }
@@ -158,7 +158,7 @@ function Invest() {
         params: { page, limit: 10 }
       });
       if (data?.success === false) {
-        throw new Error(data?.message || 'Không thể tải lịch sử');
+        throw new Error(data?.message || 'Failed to load investment history');
       }
       setHistory(data?.data || []);
       if (data?.pagination) {
@@ -166,7 +166,7 @@ function Invest() {
       }
       setHistoryError('');
     } catch (error) {
-      setHistoryError(error.message || 'Lỗi tải lịch sử đầu tư');
+      setHistoryError(error.message || 'Failed to load investment history');
     } finally {
       setHistoryLoading(false);
     }
