@@ -151,16 +151,14 @@ function DailyInterest() {
                       +{formatCurrency(item.interest || item.amount || 0, 'Nova')}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.rate ?? item.percentage ?? 0}%
+                      <div className="">Interest %: {item.rate ?? 0}</div>
+                      <div className="text-[10px] italic text-yellow-300/80 dark:text-yellow-400/80">1 Nova ~ {item.price ?? 0} USDT</div>
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`text-xs px-2 py-1 rounded ${(item.status || 'completed') === 'completed'
-                            ? 'bg-green-500/20 text-green-400 dark:text-green-300'
-                            : 'bg-yellow-500/20 text-yellow-400 dark:text-yellow-300'
-                          }`}
+                        className={`text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300`}
                       >
-                        {(item.status || 'completed') === 'completed' ? 'Completed' : 'Processing'}
+                        {item.status}
                       </span>
                     </td>
                   </tr>
