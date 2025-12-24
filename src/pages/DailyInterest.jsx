@@ -148,7 +148,7 @@ function DailyInterest() {
                       {formatCurrency(item.investmentAmount || item.investment || 0, 'USDT')}
                     </td>
                     <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                      +{formatCurrency(item.interest || item.amount || 0, 'USDT')}
+                      +{formatCurrency(item.interest || item.amount || 0, 'Nova')}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                       {item.rate ?? item.percentage ?? 0}%
