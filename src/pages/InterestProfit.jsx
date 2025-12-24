@@ -55,7 +55,7 @@ function InterestProfit() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-emerald-400 dark:text-emerald-300 mb-2">
-                Total Commission Received
+                Total POP Commission Received
               </h2>
               <p className="text-3xl font-bold text-emerald-300 dark:text-emerald-200">
                 {formatCurrency(totalCommission, 'USDT')}
@@ -110,28 +110,16 @@ function InterestProfit() {
                     Date
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Member
+                    Downline Details
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Commission (USDT)
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase whitespace-nowrap">
-                    Level
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Total Investment (USDT)
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Investment Package
+                    Commission (Nova)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
                     Package Price (USDT)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Downline Interest (USDT)
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Term
+                    Interest Details
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
                     Status
@@ -176,31 +164,25 @@ function InterestProfit() {
                       }) : '--'}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.member || '—'}
+                      <div className="">{item.member || '—'}</div>
+                      <div className="">Distance: F{item.level || '—'}</div>
                     </td>
                     <td className="py-3 px-4 text-xs text-green-400 dark:text-green-300 font-semibold">
-                      +{formatCurrency(item.commission || 0, 'USDT')}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80 whitespace-nowrap">
-                      Level {item.level || '—'}
+                      +{formatCurrency(item.commission || 0, 'Nova')}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {formatCurrency(item.totalInvestment || 0, 'USDT')}
+                      {item.packagePrice > 0 ? `${formatCurrency(item.packagePrice, 'USDT')}` : '—'}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.investmentPackage || '—'}
+                      <div className="">Rate {item.downlineInterest}%</div>
+                      <div className="text-[10px] italic text-yellow-300/80 dark:text-yellow-400/80">1 Nova ~ {item.price} USDT</div>
                     </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.packagePrice > 0 ? formatCurrency(item.packagePrice, 'USDT') : '—'}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {formatCurrency(item.downlineInterest || 0, 'USDT')}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.kyHan || '—'}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.status || 'completed'}
+                    <td className="py-3 px-4">
+                      <span
+                        className={`text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300`}
+                      >
+                        {item.status}
+                      </span>
                     </td>
                   </tr>
                 ))}
