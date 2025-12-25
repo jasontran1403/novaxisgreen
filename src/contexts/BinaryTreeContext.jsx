@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { API_ENDPOINTS } from '../config/apiConfig';
 import api from '../services/api';
-import { useAuth } from './AuthContext';
 
 const BinaryTreeContext = createContext(null);
 
@@ -14,55 +13,13 @@ export const useBinaryTree = () => {
 };
 
 export const BinaryTreeProvider = ({ children }) => {
-  const { user } = useAuth();
   const [treeData, setTreeData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // ✅ false, không phải true
   const [error, setError] = useState('');
   const [maxDepth, setMaxDepth] = useState(15);
 
-  /**
-   * Transform API response data to component-expected format
-   * API format: { id, username, fullName, leftChild, rightChild, ... }
-   * Component expects: { memberCode, name, left, right, ... }
-   */
-  const transformNodeData = (node) => {
-    if (!node) return null;
-    
-    return {
-      // Map API fields to component fields
-      memberCode: node.username,           // username → memberCode
-      name: node.fullName, // fullName → name
-      sponsorName: node.sponsorName,
-      id: node.id,
-      
-      // Copy other useful fields
-      rank: node.rank,
-      rankName: node.rankName,
-      sales: node.sales,
-      teamSales: node.teamSales,
-      teamSalesLeft: node.teamSalesLeft,
-      teamSalesRight: node.teamSalesRight,
-      side: node.side,
-      depth: node.depth,
-      hasLeftChild: node.hasLeftChild,
-      hasRightChild: node.hasRightChild,
-      timeCreate: node.timeCreate,
-      isLockAccount: node.isLockAccount,
-      
-      // Determine if this is current user
-      isCurrentUser: user?.id === node.id,
-      
-      // Recursively transform children
-      // leftChild/rightChild → left/right
-      left: node.leftChild ? transformNodeData(node.leftChild) : null,
-      right: node.rightChild ? transformNodeData(node.rightChild) : null,
-    };
-  };
-
-  // Fetch binary tree data
+  // ✅ Fetch binary tree data - CHỈ gọi khi cần
   const fetchTreeData = async (customMaxDepth = null, userId = null) => {
-    if (!user?.id) return;
-
     try {
       setLoading(true);
       setError('');
@@ -75,18 +32,18 @@ export const BinaryTreeProvider = ({ children }) => {
         params.userId = userId;
       }
       
+      console.log('[BINARY_TREE_CONTEXT] Fetching tree with params:', params);
+      
       const response = await api.get(API_ENDPOINTS.USER.BINARY_TREE, {
         params
       });
       
       if (response.success && response.data) {
-        // Transform root node
-        const transformedRoot = transformNodeData(response.data.root);
-        
-        console.log('[FETCH_TREE] Transformed root:', transformedRoot);
-        
-        setTreeData(transformedRoot);
+        // ✅ Set data TRỰC TIẾP từ API - không transform
+        // API trả về: { root: { id, username, fullName, leftChild, rightChild, ... } }
+        setTreeData(response.data.root);
         setMaxDepth(depthToUse);
+        console.log('[BINARY_TREE_CONTEXT] Tree loaded successfully');
       } else {
         // Check if error due to size, retry with smaller depth
         if (response.error?.includes('quá lớn') || response.error?.includes('serialize')) {
@@ -98,13 +55,14 @@ export const BinaryTreeProvider = ({ children }) => {
         setError(response.error || 'Không thể tải dữ liệu cây nhị phân');
       }
     } catch (err) {
-      console.error('[FETCH_TREE] Error:', err);
+      console.error('[BINARY_TREE_CONTEXT] Error:', err);
       
       // Check if error due to size
       if (err.response?.status === 413 || err.message?.includes('serialize') || err.message?.includes('quá lớn')) {
-        if (maxDepth > 3) {
-          console.warn(`Tree too large with maxDepth=${maxDepth}, retrying with maxDepth=${maxDepth - 2}`);
-          return fetchTreeData(maxDepth - 2, userId);
+        const currentDepth = customMaxDepth !== null ? customMaxDepth : maxDepth;
+        if (currentDepth > 3) {
+          console.warn(`Tree too large with maxDepth=${currentDepth}, retrying with maxDepth=${currentDepth - 2}`);
+          return fetchTreeData(currentDepth - 2, userId);
         }
       }
       setError(err.message || 'Lỗi khi tải dữ liệu cây nhị phân');
@@ -113,12 +71,8 @@ export const BinaryTreeProvider = ({ children }) => {
     }
   };
 
-  // Load data when user is available
-  useEffect(() => {
-    if (user?.id) {
-      fetchTreeData();
-    }
-  }, [user?.id]);
+  // ✅ KHÔNG có useEffect auto-fetch
+  // Component sẽ tự gọi fetchTreeData() khi cần
 
   const value = {
     treeData,
