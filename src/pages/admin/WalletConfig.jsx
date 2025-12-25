@@ -3,21 +3,14 @@ import { API_ENDPOINTS } from '../../config/apiConfig';
 import api from '../../services/api';
 
 function WalletConfig() {
-  const [usdtAddress, setUsdtAddress] = useState('');
-  const [novaAddress, setNovaAddress] = useState('');
-  const [usdtContractAddress, setUsdtContractAddress] = useState('');
-  const [novaContractAddress, setNovaContractAddress] = useState('');
-  const [usdtPrivateKey, setUsdtPrivateKey] = useState('');
-  const [novaPrivateKey, setNovaPrivateKey] = useState('');
-  const [hasUsdtPrivateKey, setHasUsdtPrivateKey] = useState(false);
-  const [hasNovaPrivateKey, setHasNovaPrivateKey] = useState(false);
-  const [showUsdtPrivateKey, setShowUsdtPrivateKey] = useState(false);
-  const [showNovaPrivateKey, setShowNovaPrivateKey] = useState(false);
+  const [bscWalletAddress, setBscWalletAddress] = useState('');
+  const [bscPrivateKey, setBscPrivateKey] = useState('');
+  const [novaPrice, setNovaPrice] = useState('');
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [resettingNova, setResettingNova] = useState(false);
 
   useEffect(() => {
     fetchWalletConfig();
@@ -29,20 +22,14 @@ function WalletConfig() {
       setError('');
       const res = await api.get(API_ENDPOINTS.ADMIN.WALLET_CONFIG);
       if (res.success) {
-        setUsdtAddress(res.data?.usdtAddress || '');
-        setNovaAddress(res.data?.novaAddress || '');
-        setUsdtContractAddress(res.data?.usdtContractAddress || '');
-        setNovaContractAddress(res.data?.novaContractAddress || '');
-        setHasUsdtPrivateKey(res.data?.hasUsdtPrivateKey || false);
-        setHasNovaPrivateKey(res.data?.hasNovaPrivateKey || false);
-        // Không load private key thực tế vì lý do bảo mật
-        setUsdtPrivateKey('');
-        setNovaPrivateKey('');
+        setBscWalletAddress(res.data?.bscWalletAddress || '');
+        setBscPrivateKey(res.data?.bscPrivateKey || '');
+        setNovaPrice(res.data?.novaPrice?.toString() || '');
       } else {
-        setError(res.error || 'Không thể tải cấu hình địa chỉ ví');
+        setError(res.error || 'Không thể tải cấu hình ví');
       }
     } catch (err) {
-      setError(err.message || 'Không thể tải cấu hình địa chỉ ví');
+      setError(err.message || 'Không thể tải cấu hình ví');
     } finally {
       setLoading(false);
     }
@@ -55,37 +42,38 @@ function WalletConfig() {
     setSuccess('');
 
     try {
-      const payload = {
-        usdtAddress: usdtAddress.trim() || undefined,
-        novaAddress: novaAddress.trim() || undefined,
-        usdtContractAddress: usdtContractAddress.trim() || undefined,
-        novaContractAddress: novaContractAddress.trim() || undefined
-      };
+      const payload = {};
       
-      // Chỉ gửi private key nếu có nhập mới
-      if (usdtPrivateKey.trim()) {
-        payload.usdtPrivateKey = usdtPrivateKey.trim();
+      // Gửi tất cả các field hiện tại
+      if (bscWalletAddress.trim()) {
+        payload.bscWalletAddress = bscWalletAddress.trim();
       }
-      if (novaPrivateKey.trim()) {
-        payload.novaPrivateKey = novaPrivateKey.trim();
+      
+      if (bscPrivateKey.trim()) {
+        payload.bscPrivateKey = bscPrivateKey.trim();
+      }
+      
+      if (novaPrice.trim()) {
+        const price = parseFloat(novaPrice);
+        if (!isNaN(price) && price > 0) {
+          payload.novaPrice = price;
+        }
       }
       
       const res = await api.post(API_ENDPOINTS.ADMIN.WALLET_CONFIG, payload);
 
       if (res.success) {
-        setSuccess(res.message || 'Cấu hình địa chỉ ví đã được cập nhật thành công');
-        // Update local state with returned values
+        setSuccess(res.message || 'Cấu hình đã được cập nhật thành công!');
+        
+        // Cập nhật với data mới từ server
         if (res.data) {
-          setUsdtAddress(res.data.usdtAddress || '');
-          setNovaAddress(res.data.novaAddress || '');
-          setUsdtContractAddress(res.data.usdtContractAddress || '');
-          setNovaContractAddress(res.data.novaContractAddress || '');
-          setHasUsdtPrivateKey(res.data.hasUsdtPrivateKey || false);
-          setHasNovaPrivateKey(res.data.hasNovaPrivateKey || false);
+          setBscWalletAddress(res.data.bscWalletAddress || '');
+          setBscPrivateKey(res.data.bscPrivateKey || '');
+          setNovaPrice(res.data.novaPrice?.toString() || '');
         }
-        // Clear private key fields sau khi lưu thành công
-        setUsdtPrivateKey('');
-        setNovaPrivateKey('');
+        
+        // Auto-hide success message sau 3 giây
+        setTimeout(() => setSuccess(''), 3000);
       } else {
         setError(res.error || 'Không thể cập nhật cấu hình');
       }
@@ -97,58 +85,36 @@ function WalletConfig() {
   };
 
   const validateAddress = (address) => {
-    if (!address || address.trim() === '') return true; // Empty is allowed
+    if (!address || address.trim() === '') return true;
     const trimmed = address.trim();
     return trimmed.startsWith('0x') && trimmed.length === 42 && /^0x[a-fA-F0-9]{40}$/.test(trimmed);
   };
 
   const validatePrivateKey = (privateKey) => {
-    if (!privateKey || privateKey.trim() === '') return true; // Empty is allowed
+    if (!privateKey || privateKey.trim() === '') return true;
     const trimmed = privateKey.trim();
     const hexOnly = trimmed.startsWith('0x') ? trimmed.slice(2) : trimmed;
     return /^[a-fA-F0-9]{64}$/.test(hexOnly);
   };
 
-  const isUsdtValid = validateAddress(usdtAddress);
-  const isNovaValid = validateAddress(novaAddress);
-  const isUsdtContractValid = validateAddress(usdtContractAddress);
-  const isNovaContractValid = validateAddress(novaContractAddress);
-  const isUsdtPrivateKeyValid = validatePrivateKey(usdtPrivateKey);
-  const isNovaPrivateKeyValid = validatePrivateKey(novaPrivateKey);
-
-  const handleResetNovaForUser = async () => {
-    const username = prompt('Nhập username của user cần reset NOVA:');
-    if (!username) return;
-
-    if (
-      !window.confirm(
-        `Bạn có chắc chắn muốn reset toàn bộ số dư NOVA về 0 cho user "${username}"?\nThao tác này không thể hoàn tác.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setResettingNova(true);
-      setError('');
-      setSuccess('');
-
-      const res = await api.post(API_ENDPOINTS.ADMIN.RESET_NOVA_FOR_USER, { username });
-
-      if (res.success) {
-        setSuccess(
-          res.message ||
-            `Đã reset NOVA cho user ${username}. Balance NOVA mới: ${res.data?.balanceNOVA ?? 0}`
-        );
-      } else {
-        setError(res.error || res.message || 'Không thể reset NOVA cho user này');
-      }
-    } catch (err) {
-      setError(err.message || 'Không thể reset NOVA cho user này');
-    } finally {
-      setResettingNova(false);
-    }
+  const validateNovaPrice = (price) => {
+    if (!price || price.trim() === '') return true;
+    const num = parseFloat(price);
+    return !isNaN(num) && num > 0;
   };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setSuccess(`Đã copy ${label} vào clipboard!`);
+      setTimeout(() => setSuccess(''), 2000);
+    }).catch(() => {
+      setError(`Không thể copy ${label}`);
+    });
+  };
+
+  const isBscAddressValid = validateAddress(bscWalletAddress);
+  const isBscPrivateKeyValid = validatePrivateKey(bscPrivateKey);
+  const isNovaPriceValid = validateNovaPrice(novaPrice);
 
   if (loading) {
     return (
@@ -163,7 +129,9 @@ function WalletConfig() {
   return (
     <div className="space-y-4">
       <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-3 sm:p-4 md:p-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-emerald-400 mb-4 sm:mb-6">Cấu hình địa chỉ ví tổng</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-emerald-400 mb-4 sm:mb-6">
+          Cấu hình ví tổng & Giá NOVA
+        </h2>
 
         {error && (
           <div className="mb-3 sm:mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-xs sm:text-sm">
@@ -178,103 +146,163 @@ function WalletConfig() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* USDT Address */}
+          {/* BSC Wallet Address */}
           <div>
             <label className="block text-sm font-medium text-emerald-400 mb-2">
               Địa chỉ ví tổng BSC
             </label>
-            <input
-              type="text"
-              value={usdtAddress}
-              onChange={(e) => setUsdtAddress(e.target.value)}
-              placeholder="0x..."
-              className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none ${
-                usdtAddress && !isUsdtValid
-                  ? 'border-red-500 focus:border-red-500'
-                  : 'border-emerald-500/30 focus:border-emerald-500'
-              }`}
-            />
-            {usdtAddress && !isUsdtValid && (
-              <p className="mt-1 text-xs text-red-400">
-                Địa chỉ ví không hợp lệ (phải bắt đầu bằng 0x và có 42 ký tự)
-              </p>
-            )}
-            {usdtAddress && isUsdtValid && (
-              <p className="mt-1 text-xs text-green-400">✓ Địa chỉ ví hợp lệ</p>
-            )}
-          </div>
-
-          {/* USDT Private Key */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-emerald-400">
-                Private Key ví tổng
-              </label>
-              {hasUsdtPrivateKey && (
-                <span className="text-xs text-green-400">✓ Đã cấu hình</span>
-              )}
-            </div>
-            <div className="relative">
+            <div className="flex items-center gap-2">
               <input
-                type={showUsdtPrivateKey ? 'text' : 'password'}
-                value={usdtPrivateKey}
-                onChange={(e) => setUsdtPrivateKey(e.target.value)}
-                placeholder={hasUsdtPrivateKey ? 'Nhập private key mới để cập nhật (hoặc để trống)' : 'Nhập private key (64 ký tự)'}
-                className={`w-full px-3 sm:px-4 py-2 pr-10 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none font-mono ${
-                  usdtPrivateKey && !isUsdtPrivateKeyValid
+                type="text"
+                value={bscWalletAddress}
+                onChange={(e) => setBscWalletAddress(e.target.value)}
+                placeholder="0x..."
+                className={`flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none ${
+                  bscWalletAddress && !isBscAddressValid
                     ? 'border-red-500 focus:border-red-500'
                     : 'border-emerald-500/30 focus:border-emerald-500'
                 }`}
               />
-              <button
-                type="button"
-                onClick={() => setShowUsdtPrivateKey(!showUsdtPrivateKey)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-emerald-400 text-sm"
-              >
-                {showUsdtPrivateKey ? '👁️' : '👁️‍🗨️'}
-              </button>
+              {bscWalletAddress && (
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(bscWalletAddress, 'địa chỉ ví')}
+                  className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded-lg text-emerald-400 transition-colors text-sm shrink-0"
+                  title="Copy địa chỉ"
+                >
+                  📋
+                </button>
+              )}
             </div>
-            {usdtPrivateKey && !isUsdtPrivateKeyValid && (
+            {bscWalletAddress && !isBscAddressValid && (
               <p className="mt-1 text-xs text-red-400">
-                Private key không hợp lệ (phải là 64 ký tự, có thể có prefix 0x)
+                Địa chỉ ví không hợp lệ (phải bắt đầu bằng 0x và có 42 ký tự)
               </p>
             )}
-            {usdtPrivateKey && isUsdtPrivateKeyValid && (
+            {bscWalletAddress && isBscAddressValid && (
+              <p className="mt-1 text-xs text-green-400">✓ Địa chỉ ví hợp lệ</p>
+            )}
+          </div>
+
+          {/* BSC Private Key */}
+          <div>
+            <label className="block text-sm font-medium text-amber-400 mb-2">
+              Private Key ví tổng BSC
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  type={showPrivateKey ? 'text' : 'password'}
+                  value={bscPrivateKey}
+                  onChange={(e) => setBscPrivateKey(e.target.value)}
+                  placeholder="Nhập private key (64 ký tự hex)"
+                  className={`w-full px-3 sm:px-4 py-2 pr-10 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none font-mono ${
+                    bscPrivateKey && !isBscPrivateKeyValid
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-amber-500/30 focus:border-amber-500'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPrivateKey(!showPrivateKey)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-amber-400 text-sm"
+                  title={showPrivateKey ? 'Ẩn' : 'Hiện'}
+                >
+                  {showPrivateKey ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {bscPrivateKey && (
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(
+                    bscPrivateKey.startsWith('0x') ? bscPrivateKey : `0x${bscPrivateKey}`,
+                    'private key'
+                  )}
+                  className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 rounded-lg text-amber-400 transition-colors text-sm shrink-0"
+                  title="Copy private key"
+                >
+                  📋
+                </button>
+              )}
+            </div>
+            {bscPrivateKey && !isBscPrivateKeyValid && (
+              <p className="mt-1 text-xs text-red-400">
+                Private key không hợp lệ (phải là 64 ký tự hex, có thể có prefix 0x)
+              </p>
+            )}
+            {bscPrivateKey && isBscPrivateKeyValid && (
               <p className="mt-1 text-xs text-green-400">✓ Private key hợp lệ</p>
             )}
-            {!usdtPrivateKey && hasUsdtPrivateKey && (
-              <p className="mt-1 text-xs text-slate-400">
-                Để trống nếu không muốn thay đổi private key hiện tại
+            {bscPrivateKey && (
+              <p className="mt-1 text-xs text-amber-400/70">
+                ⚠️ Không chia sẻ private key với bất kỳ ai!
+              </p>
+            )}
+          </div>
+
+          {/* NOVA Price */}
+          <div>
+            <label className="block text-sm font-medium text-emerald-400 mb-2">
+              Giá NOVA (USD)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
+                $
+              </span>
+              <input
+                type="number"
+                step="0.0001"
+                min="0"
+                value={novaPrice}
+                onChange={(e) => setNovaPrice(e.target.value)}
+                placeholder="0.1000"
+                className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none ${
+                  novaPrice && !isNovaPriceValid
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-emerald-500/30 focus:border-emerald-500'
+                }`}
+              />
+            </div>
+            {novaPrice && !isNovaPriceValid && (
+              <p className="mt-1 text-xs text-red-400">Giá NOVA phải lớn hơn 0</p>
+            )}
+            {novaPrice && isNovaPriceValid && (
+              <p className="mt-1 text-xs text-green-400">
+                ✓ Giá hợp lệ: ${parseFloat(novaPrice).toFixed(4)}
               </p>
             )}
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={
                 saving ||
-                (usdtAddress && !isUsdtValid) ||
-                (novaAddress && !isNovaValid) ||
-                (usdtContractAddress && !isUsdtContractValid) ||
-                (novaContractAddress && !isNovaContractValid) ||
-                (usdtPrivateKey && !isUsdtPrivateKeyValid) ||
-                (novaPrivateKey && !isNovaPrivateKeyValid)
+                (bscWalletAddress && !isBscAddressValid) ||
+                (bscPrivateKey && !isBscPrivateKeyValid) ||
+                (novaPrice && !isNovaPriceValid)
               }
-              className={`w-full sm:w-auto px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+              className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                 saving ||
-                (usdtAddress && !isUsdtValid) ||
-                (novaAddress && !isNovaValid) ||
-                (usdtContractAddress && !isUsdtContractValid) ||
-                (novaContractAddress && !isNovaContractValid) ||
-                (usdtPrivateKey && !isUsdtPrivateKeyValid) ||
-                (novaPrivateKey && !isNovaPrivateKeyValid)
+                (bscWalletAddress && !isBscAddressValid) ||
+                (bscPrivateKey && !isBscPrivateKeyValid) ||
+                (novaPrice && !isNovaPriceValid)
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
               }`}
             >
-              {saving ? 'Đang lưu...' : 'Lưu cấu hình'}
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Đang lưu...
+                </span>
+              ) : (
+                'Lưu cấu hình'
+              )}
             </button>
           </div>
         </form>
@@ -284,4 +312,3 @@ function WalletConfig() {
 }
 
 export default WalletConfig;
-
