@@ -1,5 +1,5 @@
 // API Base URL
-export const API_BASE_URL = "https://767af629fd0f.ngrok-free.app";
+export const API_BASE_URL = "https://api.novaxisgreen.com";
 
 // API Endpoints
 export const API_ENDPOINTS = {
