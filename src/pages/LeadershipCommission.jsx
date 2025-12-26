@@ -130,14 +130,16 @@ function LeadershipCommission() {
                         }) : '--'}
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {item.member || '--'}
+                        <div className="">{item.member || '--'} -- { }</div>
+                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                        {formatCurrency(item.salesVolume || 0, 'USDT')}
+                        <div className="">{formatCurrency(item.salesVolume || 0, 'USDT')}</div>
+                        <div className="text-[10px] text-emerald-300/80 dark:text-emerald-400/80">{item.rate}%</div>
                       </td>
                       <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
                         <div className="">+{formatCurrency(item.commission || 0, 'NOVA')}</div>
-                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
+                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">~ {formatCurrency(item.commission*item.price || 0, 'USDT')}</div>
                       </td>
                       <td className="py-3 px-4">
                         <span

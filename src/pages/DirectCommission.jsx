@@ -93,9 +93,6 @@ function DirectCommission() {
                     Member
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">
-                    Level
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">
                     Commission Received (NOVA)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300">
@@ -143,11 +140,9 @@ function DirectCommission() {
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                       {item.member}
                     </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.level ? `Level ${item.level}` : 'Level 1'}
-                    </td>
                     <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                      +{formatCurrency(item.commission || 0, 'Nova')}
+                      <div className="">+{formatCurrency(item.commission || 0, 'Nova')}</div>
+                      <div className="text-[10px] italic text-emerald-300/80 dark:text-emerald-400/80">~ {formatCurrency(item.commission * item.price, 'USDT')}</div>
                     </td>
                     <td className="py-3 px-4">
                       <span

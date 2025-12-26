@@ -119,9 +119,6 @@ function InterestProfit() {
                     Package Price (USDT)
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
-                    Interest Details
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 dark:text-emerald-300 uppercase">
                     Status
                   </th>
                 </tr>
@@ -168,14 +165,12 @@ function InterestProfit() {
                       <div className="">Distance: F{item.level || '—'}</div>
                     </td>
                     <td className="py-3 px-4 text-xs text-green-400 dark:text-green-300 font-semibold">
-                      +{formatCurrency(item.commission || 0, 'Nova')}
+                      <div className="">+{formatCurrency(item.commission || 0, 'Nova')}</div>
+                      <div className="text-[10px] italic text-emerald-300/80 dark:text-emerald-400/80">~ {formatCurrency(item.commission * item.price, 'USDT')}</div>
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      {item.packagePrice > 0 ? `${formatCurrency(item.packagePrice, 'USDT')}` : '—'}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      <div className="">Rate {item.downlineInterest}%</div>
-                      <div className="text-[10px] italic text-yellow-300/80 dark:text-yellow-400/80">1 Nova ~ {item.price} USDT</div>
+                      <div className="">{item.packagePrice > 0 ? `${formatCurrency(item.packagePrice, 'USDT')}` : '—'}</div>
+                      <div className="text-[10px] italic text-yellow-300/80 dark:text-yellow-400/80">Rate {item.downlineInterest}% (1 Nova ~ {item.price} USDT)</div>
                     </td>
                     <td className="py-3 px-4">
                       <span

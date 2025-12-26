@@ -148,10 +148,11 @@ function DailyInterest() {
                       {formatCurrency(item.investmentAmount || item.investment || 0, 'USDT')}
                     </td>
                     <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
-                      +{formatCurrency(item.interest || item.amount || 0, 'Nova')}
+                      <div className="">+{formatCurrency(item.interest || item.amount || 0, 'Nova')}</div>
+                      <div className="text-[10px] italic text-emerald-300/80 dark:text-emerald-400/80">~ {formatCurrency(item.interest*item.price, 'USDT')}</div>
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                      <div className="">Interest %: {item.rate ?? 0}</div>
+                      <div className="">Interest: {item.rate ?? 0}%</div>
                       <div className="text-[10px] italic text-yellow-300/80 dark:text-yellow-400/80">1 Nova ~ {item.price ?? 0} USDT</div>
                     </td>
                     <td className="py-3 px-4">

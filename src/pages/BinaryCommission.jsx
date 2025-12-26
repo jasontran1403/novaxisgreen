@@ -205,11 +205,12 @@ function BinaryCommission() {
                             {item.username || '--'}
                           </td>
                           <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
-                            {Number(item.commissionRate || 0).toFixed(2)}%
+                            <div className="">{Number(item.commissionRate || 0).toFixed(2)}%</div>
+                            <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
                           </td>
                           <td className="py-3 px-4 text-xs font-medium text-green-400 dark:text-green-300">
                             <div className="">+{safeCurrencyFormat(item.commissionAmount || 0, 'NOVA')}</div>
-                        <div className="text-[10px] italic text-yellow-400 dark:text-yellow-300">1 Nova ~ {formatCurrency(item.price || 0, 'USDT')}</div>
+                            <div className="text-[10px] italic text-emerald-300/80 dark:text-emerald-400/80">~ {formatCurrency(item.commissionAmount*item.price, 'USDT')}</div>
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 dark:text-green-300">
