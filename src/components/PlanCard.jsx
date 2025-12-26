@@ -76,8 +76,7 @@ function PlanCard({ plan, loading, onRefresh }) {
           >
             {loading
               ? '...'
-              : `${plan.maxoutRemaining.toLocaleString()} ${plan.currency} / 
-         ${plan.totalMaxout.toLocaleString()} ${plan.currency}`}
+              : `${plan.maxoutRemaining.toLocaleString()} ${plan.currency}`}
           </p>
         </div>
 
