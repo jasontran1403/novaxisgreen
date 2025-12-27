@@ -471,8 +471,8 @@ function Withdraw() {
                           })()}
                         </td>
                         <td className="py-3 px-4 text-xs">
-                          <div>{formatCurrency(item.amount, item.currency || token)}</div>
-                          <div className="text-red-400 italic text-xs">Fee {formatCurrency(item.fee || calculateFee(), item.currency || token)}</div>
+                          <div className="text-emerald-300/80 dark:text-emerald-400/80 text-xs">{formatCurrency(item.amount, item.currency || token)}</div>
+                          <div className="text-yellow-400 italic text-xs">Fee {formatCurrency(item.fee || calculateFee(), item.currency || token)}</div>
                         </td>
                         <td className="py-3 px-4 text-xs font-mono">
                           <button

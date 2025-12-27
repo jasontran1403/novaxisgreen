@@ -250,6 +250,17 @@ function Dashboard() {
                 0xb3f338b391eb018CccA92d4AC8c8dD235632f6E5
               </a>
             </p>
+            <p className="text-sm text-gray-300 break-all">
+              Burn Address:{' '}
+              <a
+                href="https://bscscan.com/address/0x000000000000000000000000000000000000dEaD"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-300 underline hover:text-emerald-200"
+              >
+                0x000000000000000000000000000000000000dEaD
+              </a>
+            </p>
           </div>
           <div className="w-full md:w-52 lg:w-56 xl:w-64 max-w-xs md:max-w-sm">
             <img

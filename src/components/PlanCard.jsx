@@ -1,4 +1,5 @@
 import { RefreshCw } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 function PlanCard({ plan, loading, onRefresh }) {
   const getMaxoutColorClass = (remaining, total) => {
@@ -67,7 +68,7 @@ function PlanCard({ plan, loading, onRefresh }) {
 
         {/* Maxout Remaining */}
         <div className="space-y-1">
-          <p className="text-xs text-emerald-400 dark:text-emerald-300">Maxout Remaining</p>
+          <p className="text-xs text-emerald-400 dark:text-emerald-300">Maxout Used</p>
           <p
             className={`text-lg font-bold ${loading
                 ? 'text-slate-400'
@@ -76,7 +77,7 @@ function PlanCard({ plan, loading, onRefresh }) {
           >
             {loading
               ? '...'
-              : `${plan.maxoutRemaining.toLocaleString()} ${plan.currency}`}
+              : `${formatCurrency(plan.totalMaxout - plan.maxoutRemaining, "USDT")}`}
           </p>
         </div>
 
