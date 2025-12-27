@@ -181,6 +181,13 @@ function AdminDashboard() {
             <div className="text-sm text-emerald-400">Member Management</div>
           </a>
           <a
+            href="/admin/investments"
+            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
+          >
+            <div className="text-2xl mb-2">💼</div>
+            <div className="text-sm text-emerald-400">Investment Management</div>
+          </a>
+          <a
             href="/admin/settings"
             className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
           >

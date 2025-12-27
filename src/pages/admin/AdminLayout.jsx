@@ -28,6 +28,7 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
     { path: '/admin/members', label: 'Member Management', icon: '👥' },
+    { path: '/admin/investments', label: 'Investment Management', icon: '💼' },
     { path: '/admin/binary-tree', label: 'Binary Tree', icon: '🌳' },
     { path: '/admin/deposits', label: 'Deposit Management', icon: '💰' },
     { path: '/admin/withdraws', label: 'Withdraw Management', icon: '💸' },

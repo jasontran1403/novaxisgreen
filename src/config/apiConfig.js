@@ -83,6 +83,9 @@ export const API_ENDPOINTS = {
     // Dashboard
     DASHBOARD_STATS: '/api/admin/dashboard/stats',
 
+    INVESTMENTS: '/api/admin/investments',
+    INVESTMENT_REVOKE: (id) => `/api/admin/revoke/${id}`,
+
     // Members
     MEMBERS: '/api/admin/members',
     MEMBERS_EXPORT: '/api/admin/members/export',

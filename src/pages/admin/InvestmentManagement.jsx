@@ -1,0 +1,406 @@
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/apiConfig';
+import api from '../../services/api';
+import { formatCurrency } from '../../utils/formatCurrency';
+import debounce from 'lodash.debounce';
+import { useToast } from '../../customHook/useToast';
+
+function InvestmentManagement() {
+  const toast = useToast();
+  const navigate = useNavigate();
+  const [investments, setInvestments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedInvestment, setSelectedInvestment] = useState(null);
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+
+  // Filters
+  const [filters, setFilters] = useState({
+    username: ''
+  });
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
+
+  // Debounce fetchInvestments cho input tìm kiếm (1200ms)
+  const debouncedFetchInvestments = useCallback(
+    debounce(() => {
+      fetchInvestments();
+    }, 1200),
+    [filters, page]
+  );
+
+  useEffect(() => {
+    debouncedFetchInvestments();
+    return () => {
+      debouncedFetchInvestments.cancel();
+    };
+  }, [debouncedFetchInvestments]);
+
+  // Gọi fetch ngay khi chuyển trang (không debounce)
+  useEffect(() => {
+    fetchInvestments();
+  }, [page]);
+
+  const fetchInvestments = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const params = { page, limit };
+
+      // Add username filter if exists
+      if (filters.username && filters.username.trim()) {
+        params.username = filters.username.trim();
+      }
+
+      const res = await api.get(API_ENDPOINTS.ADMIN.INVESTMENTS, { params });
+
+      if (res.success) {
+        setInvestments(res.data?.data || []);
+        setPagination(res.data?.pagination || { total: 0, totalPages: 0 });
+      } else {
+        setError(res.error || 'Failed to load investments');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load investments');
+      console.error('Fetch investments error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRevokeInvestment = async (investmentId) => {
+    try {
+      return;
+      setRevoking(true);
+      const res = await api.post(API_ENDPOINTS.ADMIN.INVESTMENT_REVOKE(investmentId));
+
+      if (res.success) {
+        toast.success(res.message || 'Investment revoked successfully');
+        setShowRevokeModal(false);
+        fetchInvestments(); // Reload list
+
+        // Show summary
+        if (res.data) {
+          const summary = `
+            Thu hồi thành công!
+            - Số users bị ảnh hưởng: ${res.data.affectedUsers}
+            - Direct Commission: $${res.data.directCommissionRevoked?.toFixed(2) || 0}
+            - Binary Commission: $${res.data.binaryCommissionRevoked?.toFixed(2) || 0}
+            - Leader Commission: $${res.data.leaderCommissionRevoked?.toFixed(2) || 0}
+            - POP Commission: $${res.data.popCommissionRevoked?.toFixed(2) || 0}
+            - Total USD: $${res.data.totalUsdRevoked?.toFixed(2) || 0}
+          `.trim();
+
+          setTimeout(() => {
+            toast.success(summary);
+          }, 500);
+        }
+      } else {
+        toast.error(res.message || res.error || 'Failed to revoke investment');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to revoke investment');
+      console.error('Revoke investment error:', err);
+    } finally {
+      setRevoking(false);
+    }
+  };
+
+  const updateFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  };
+
+  // Calculate stats
+  const totalValue = investments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  const activeCount = investments.filter(inv => inv.status === 'Active').length;
+  const completedCount = investments.filter(inv => inv.status === 'Completed').length;
+  const revokedCount = investments.filter(inv => inv.isRevoked).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <h2 className="text-xl font-semibold text-emerald-400">Investment Management</h2>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="Search by username..."
+            value={filters.username}
+            onChange={(e) => updateFilter('username', e.target.value)}
+            className="px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-sm"
+          />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
+            <div className="text-xs text-slate-400">Total Investments</div>
+            <div className="text-xl font-bold text-emerald-400">{pagination.total || 0}</div>
+          </div>
+
+          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
+            <div className="text-xs text-slate-400">Total Value</div>
+            <div className="text-lg font-bold text-blue-400">
+              {formatCurrency(totalValue, 'USDT')}
+            </div>
+          </div>
+
+          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
+            <div className="text-xs text-slate-400">Active / Completed</div>
+            <div className="text-sm font-bold">
+              <span className="text-green-400">{activeCount}</span>
+              <span className="text-slate-500"> / </span>
+              <span className="text-blue-400">{completedCount}</span>
+            </div>
+          </div>
+
+          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
+            <div className="text-xs text-slate-400">Revoked</div>
+            <div className="text-xl font-bold text-red-400">{revokedCount}</div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-emerald-500/30 bg-slate-700/50">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">ID</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Username</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Package</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Amount</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Daily Rate</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Progress</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Date</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Status</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="9" className="py-8 text-center text-slate-400">Loading...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="9" className="py-8 text-center text-red-400">{error}</td>
+                </tr>
+              ) : investments.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="py-8 text-center text-slate-400">No investments found</td>
+                </tr>
+              ) : (
+                investments.map((investment) => (
+                  <tr
+                    key={investment.id}
+                    className={`border-b border-emerald-500/10 hover:bg-slate-700/30 ${investment.isRevoked ? 'opacity-60' : ''
+                      }`}
+                  >
+                    <td className="py-3 px-4 text-xs text-slate-300">{investment.id}</td>
+
+                    <td className="py-3 px-4 text-xs text-emerald-400 font-medium">
+                      {investment.username || 'N/A'}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-slate-300">
+                      {investment.packageName || 'N/A'}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-blue-400 font-medium">
+                      {formatCurrency(investment.amount || 0, 'USDT')}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-purple-400">
+                      {(investment.dailyRate || 0).toFixed(2)}%
+                    </td>
+
+                    <td className="py-3 px-4 text-xs">
+                      <div className="text-slate-300">
+                        {investment.daysPaid || 0} / {investment.cycles || 0} days
+                      </div>
+                      <div className="w-full bg-slate-700 rounded-full h-1.5 mt-1">
+                        <div
+                          className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                          style={{
+                            width: `${((investment.daysPaid || 0) / (investment.cycles || 1)) * 100}%`
+                          }}
+                        />
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-slate-400">
+                      {formatDate(investment.investmentDate)}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs">
+                      {investment.isRevoked ? (
+                        <div>
+                          <span className="block text-red-400 font-medium">🚫 Revoked</span>
+                          <span className="text-slate-500 text-[10px]">
+                            by {investment.revokedBy || 'admin'}
+                          </span>
+                        </div>
+                      ) : investment.status === 'Active' ? (
+                        <span className="text-green-400">✓ Active</span>
+                      ) : investment.status === 'Completed' ? (
+                        <span className="text-blue-400">✓ Completed</span>
+                      ) : (
+                        <span className="text-slate-400">{investment.status}</span>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs">
+                      <button
+                        onClick={() => {
+                          setSelectedInvestment(investment);
+                          setShowRevokeModal(true);
+                        }}
+                        disabled={investment.isRevoked || revoking}
+                        className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 ${investment.isRevoked
+                            ? 'bg-slate-700/50 border-slate-600 text-slate-500 cursor-not-allowed'
+                            : 'bg-orange-500/20 hover:bg-orange-500/30 border-orange-500/30 hover:border-orange-500/50 text-orange-400'
+                          }`}
+                        title={investment.isRevoked ? 'Already revoked' : 'Thu hồi gói'}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-[10px] font-medium hidden sm:inline">
+                          {investment.isRevoked ? 'Revoked' : 'Thu hồi'}
+                        </span>
+                        {!investment.isRevoked && (
+                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
+                            Thu hồi hoa hồng/doanh số
+                          </span>
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-4">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-emerald-400"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-slate-400">
+              Page {page} of {pagination.totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
+              className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm text-emerald-400"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Revoke Confirmation Modal */}
+      {showRevokeModal && selectedInvestment && (
+        <RevokeConfirmationModal
+          investment={selectedInvestment}
+          onClose={() => setShowRevokeModal(false)}
+          onConfirm={() => handleRevokeInvestment(selectedInvestment.id)}
+          loading={revoking}
+        />
+      )}
+    </div>
+  );
+}
+
+// Revoke Confirmation Modal Component
+function RevokeConfirmationModal({ investment, onClose, onConfirm, loading }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 border border-orange-500/50 rounded-lg p-6 max-w-md w-full">
+        <h3 className="text-xl font-semibold text-orange-400 mb-4">⚠️ Xác nhận thu hồi gói đầu tư</h3>
+
+        <div className="space-y-3 mb-6">
+          <div className="bg-slate-700/50 rounded p-3 border border-emerald-500/30">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-slate-400">ID:</div>
+              <div className="text-white font-medium">{investment.id}</div>
+
+              <div className="text-slate-400">Username:</div>
+              <div className="text-emerald-400 font-medium">{investment.username}</div>
+
+              <div className="text-slate-400">Package:</div>
+              <div className="text-white">{investment.packageName}</div>
+
+              <div className="text-slate-400">Amount:</div>
+              <div className="text-blue-400 font-medium">{formatCurrency(investment.amount, 'USDT')}</div>
+
+              <div className="text-slate-400">Progress:</div>
+              <div className="text-white">{investment.daysPaid} / {investment.cycles} days</div>
+            </div>
+          </div>
+
+          <div className="bg-red-900/20 border border-red-500/50 rounded p-3">
+            <div className="text-red-400 text-sm space-y-1">
+              <div className="font-semibold">⚠️ Hành động này sẽ:</div>
+              <ul className="list-disc list-inside space-y-1 text-xs ml-2">
+                <li>Thu hồi tất cả Direct Commission</li>
+                <li>Thu hồi tất cả Binary Commission</li>
+                <li>Thu hồi tất cả Leader Commission</li>
+                <li>Thu hồi tất cả POP Commission</li>
+                <li>Trừ doanh số Placement</li>
+                <li>Trừ Maxout ban đầu</li>
+              </ul>
+              <div className="font-semibold mt-2">✅ Không thu hồi:</div>
+              <ul className="list-disc list-inside text-xs ml-2">
+                <li>Daily Interest (lãi ngày - giữ lại)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 rounded text-orange-400 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Đang xử lý...' : '✓ Xác nhận thu hồi'}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm disabled:opacity-50"
+          >
+            Hủy
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default InvestmentManagement;

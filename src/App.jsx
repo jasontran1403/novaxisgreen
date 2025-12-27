@@ -32,6 +32,7 @@ import ResetRebuild from './pages/admin/ResetRebuild'
 import WalletConfig from './pages/admin/WalletConfig'
 import WithdrawManagement from './pages/admin/WithdrawManagement'
 import { ToastProvider } from './contexts/ToastProvider'
+import InvestmentManagement from './pages/admin/InvestmentManagement'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -282,6 +283,16 @@ function App() {
                 <AdminRoute>
                   <AdminLayout>
                     <MemberManagement />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/investments"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <InvestmentManagement />
                   </AdminLayout>
                 </AdminRoute>
               }

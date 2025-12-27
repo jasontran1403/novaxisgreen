@@ -372,26 +372,11 @@ function Invest() {
                       className="border-b border-emerald-500/10 hover:bg-emerald-500/5 transition-colors"
                     >
                       <td className="py-3 px-4 text-xs text-emerald-300/80">
-                        {(() => {
-                          const timestamp = Number(item.startDate || item.startDate);
-                          if (isNaN(timestamp) || timestamp <= 0) {
-                            return <span className="text-red-400">Invalid Date</span>;
-                          }
-                          const date = new Date(timestamp);
-                          if (isNaN(date.getTime())) {
-                            return <span className="text-red-400">Invalid Date</span>;
-                          }
-                          return (
-                            <div className="whitespace-nowrap">
-                              <div className="font-medium">
-                                {date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                              </div>
-                              <div className="text-emerald-300/60">
-                                {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                              </div>
-                            </div>
-                          );
-                        })()}
+                        <div className="whitespace-nowrap">
+                          <div className="font-medium">
+                            {item.startDate ? new Date(item.startDate).toLocaleDateString('en-US') : '--'}
+                          </div>
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80">{item.packageName || 'N/A'}</td>
                       <td className="py-3 px-4 text-xs font-medium text-green-400">{formatCurrency(item.amount || 0, 'USDT')}</td>
@@ -399,11 +384,10 @@ function Invest() {
                       <td className="py-3 px-4 text-xs text-emerald-300/80">{item.dailyRate ? `${Number(item.dailyRate).toFixed(2)}%` : '--'}</td>
                       <td className="py-3 px-4">
                         <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            (item.status || '').toLowerCase().includes('active')
+                          className={`text-xs px-2 py-1 rounded ${(item.status || '').toLowerCase().includes('active')
                               ? 'bg-green-500/20 text-green-400'
                               : 'bg-yellow-500/20 text-yellow-400'
-                          }`}
+                            }`}
                         >
                           {(item.status || 'Active').trim()}
                         </span>
@@ -507,13 +491,12 @@ function Invest() {
                       type="button"
                       onClick={() => setSelectedCurrency(cur)}
                       disabled={!hasEnough || (cur === 'NOVA' && novaPrice <= 0)}
-                      className={`p-4 rounded-lg border-2 text-center transition-all ${
-                        selectedCurrency === cur
+                      className={`p-4 rounded-lg border-2 text-center transition-all ${selectedCurrency === cur
                           ? 'border-emerald-500 bg-emerald-500/20'
                           : hasEnough
                             ? 'border-emerald-500/40 hover:border-emerald-500/60 bg-slate-600/40'
                             : 'border-red-500/40 bg-red-500/10 cursor-not-allowed opacity-70'
-                      }`}
+                        }`}
                     >
                       <div className="font-semibold">{cur} Wallet</div>
                       <div className="text-sm mt-1">
@@ -543,11 +526,10 @@ function Invest() {
               <button
                 onClick={handleConfirmInvest}
                 disabled={investing || requiredAmount > (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                  !investing && requiredAmount <= (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${!investing && requiredAmount <= (selectedCurrency === 'USDT' ? usdtBalance : novaBalance)
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                     : 'bg-slate-700 text-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 {investing ? 'Processing...' : 'Confirm & Invest'}
               </button>

@@ -135,14 +135,7 @@ function DailyInterest() {
                     className="border-b border-emerald-500/10 dark:border-emerald-400/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5 transition-colors"
                   >
                     <td className="py-3 px-4 text-xs text-emerald-300 dark:text-emerald-400">
-                      {item.date ? new Date(item.date).toLocaleDateString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                      }) : '--'}
+                      {item.date ? new Date(item.date).toLocaleDateString('en-US') : '--'}
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                       {formatCurrency(item.investmentAmount || item.investment || 0, 'USDT')}
