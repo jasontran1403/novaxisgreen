@@ -110,16 +110,6 @@ function App() {
               }
             />
             <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <LayoutWrapper>
-                    <Dashboard />
-                  </LayoutWrapper>
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/invest"
               element={
                 <ProtectedRoute>

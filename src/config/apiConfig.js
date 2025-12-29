@@ -10,8 +10,7 @@ export const API_ENDPOINTS = {
     ADMIN_LOGIN: '/api/auth/admin-login',
     REGISTER: '/api/auth/register',
     ME: '/api/auth/me',
-    LOGOUT: '/api/auth/logout',
-    CHANGE_PASSWORD: '/api/auth/change-password',
+    LOGOUT: '/api/auth/logout',    
     GET_2FA_STATUS: '/api/auth/2fa/status',
     ENABLE_2FA: '/api/auth/2fa/enable',
     VERIFY_2FA: '/api/auth/2fa/verify',
@@ -26,6 +25,8 @@ export const API_ENDPOINTS = {
 
   // User
   USER: {
+    CHANGE_PASSWORD: '/api/user/change-password',
+    PASSWORD_STATUS: '/api/user/password-status',
     STATISTIC: '/api/user/statistic',
     MY_REFLINKS: '/api/user/my-reflinks',
     BINARY_TREE: '/api/user/binary-tree',       // ← FIX: Đúng endpoint
