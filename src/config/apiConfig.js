@@ -1,6 +1,6 @@
 // API Base URL
-export const API_BASE_URL = "https://api.novaxisgreen.com";
-// export const API_BASE_URL = " http://localhost:9393";
+// export const API_BASE_URL = "https://api.novaxisgreen.com";
+export const API_BASE_URL = " http://localhost:9393";
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -85,6 +85,9 @@ export const API_ENDPOINTS = {
 
     INVESTMENTS: '/api/admin/investments',
     INVESTMENT_REVOKE: (id) => `/api/admin/revoke/${id}`,
+    MARKETING_USER: '/api/admin/marketing-users',
+    ADD_MARKETING_USER: '/api/admin/marketing-add',
+    REMOVE_MARKETING_USER: (username) => `/api/admin/marketing-remove/${username}`,
 
     // Members
     MEMBERS: '/api/admin/members',

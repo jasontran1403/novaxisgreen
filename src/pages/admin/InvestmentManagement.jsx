@@ -15,6 +15,11 @@ function InvestmentManagement() {
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revoking, setRevoking] = useState(false);
+  
+  // Marketing users state
+  const [showMarketingModal, setShowMarketingModal] = useState(false);
+  const [marketingUsers, setMarketingUsers] = useState([]);
+  const [loadingMarketing, setLoadingMarketing] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -74,7 +79,6 @@ function InvestmentManagement() {
 
   const handleRevokeInvestment = async (investmentId) => {
     try {
-      return;
       setRevoking(true);
       const res = await api.post(API_ENDPOINTS.ADMIN.INVESTMENT_REVOKE(investmentId));
 
@@ -110,6 +114,33 @@ function InvestmentManagement() {
     }
   };
 
+  // ========================================
+  // MARKETING USERS FUNCTIONS
+  // ========================================
+  
+  const fetchMarketingUsers = async () => {
+    try {
+      setLoadingMarketing(true);
+      const res = await api.get(API_ENDPOINTS.ADMIN.MARKETING_USER);
+
+      if (res.success) {
+        setMarketingUsers(res.data || []);
+      } else {
+        toast.error(res.error || 'Failed to load marketing users');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to load marketing users');
+      console.error('Fetch marketing users error:', err);
+    } finally {
+      setLoadingMarketing(false);
+    }
+  };
+
+  const handleShowMarketingModal = () => {
+    setShowMarketingModal(true);
+    fetchMarketingUsers();
+  };
+
   const updateFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPage(1);
@@ -135,6 +166,17 @@ function InvestmentManagement() {
       <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-4 md:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-emerald-400">Investment Management</h2>
+          
+          {/* Marketing Users Button */}
+          <button
+            onClick={handleShowMarketingModal}
+            className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 rounded text-purple-400 text-sm font-medium transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span>Marketing Users</span>
+          </button>
         </div>
 
         {/* Filters */}
@@ -332,12 +374,24 @@ function InvestmentManagement() {
           loading={revoking}
         />
       )}
+
+      {/* Marketing Users Modal */}
+      {showMarketingModal && (
+        <MarketingUsersModal
+          marketingUsers={marketingUsers}
+          loading={loadingMarketing}
+          onClose={() => setShowMarketingModal(false)}
+          onRefresh={fetchMarketingUsers}
+          toast={toast}
+        />
+      )}
     </div>
   );
 }
 
 // Revoke Confirmation Modal Component
 function RevokeConfirmationModal({ investment, onClose, onConfirm, loading }) {
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 border border-orange-500/50 rounded-lg p-6 max-w-md w-full">
@@ -396,6 +450,166 @@ function RevokeConfirmationModal({ investment, onClose, onConfirm, loading }) {
             className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm disabled:opacity-50"
           >
             Hủy
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Marketing Users Modal Component
+function MarketingUsersModal({ marketingUsers, loading, onClose, onRefresh, toast }) {
+  const [usernamesInput, setUsernamesInput] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState(null);
+
+  const handleAddUsers = async () => {
+    if (!usernamesInput.trim()) {
+      toast.error('Vui lòng nhập username');
+      return;
+    }
+
+    try {
+      setAdding(true);
+      const res = await api.post(API_ENDPOINTS.ADMIN.ADD_MARKETING_USER, {
+        usernames: usernamesInput.trim()
+      });
+
+      if (res.success) {
+        toast.success(res.message || 'Đã thêm users vào marketing');
+        setUsernamesInput('');
+        onRefresh();
+      } else {
+        toast.error(res.error || res.message || 'Failed to add users');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to add users');
+      console.error('Add marketing users error:', err);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleRemoveUser = async (username) => {
+    try {
+      setRemoving(username);
+      const res = await api.delete(API_ENDPOINTS.ADMIN.REMOVE_MARKETING_USER(username));
+
+      if (res.success) {
+        toast.success(res.message || `Đã xóa ${username} khỏi marketing`);
+        onRefresh();
+      } else {
+        toast.error(res.error || res.message || 'Failed to remove user');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to remove user');
+      console.error('Remove marketing user error:', err);
+    } finally {
+      setRemoving(null);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 border border-purple-500/50 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-purple-400 flex items-center gap-2">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Marketing Users
+            <span className="text-sm text-slate-400">({marketingUsers.length})</span>
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Add Users Section */}
+        <div className="bg-slate-700/50 rounded-lg p-4 border border-purple-500/30 mb-4">
+          <div className="text-sm text-slate-300 mb-2">Thêm users vào marketing:</div>
+          <div className="text-xs text-slate-400 mb-2">
+            Nhập username, phân tách bằng dấu chấm phẩy (;)
+            <br />
+            Ví dụ: <span className="text-purple-400">user1;user2;user3</span>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={usernamesInput}
+              onChange={(e) => setUsernamesInput(e.target.value)}
+              placeholder="username1;username2;username3..."
+              className="flex-1 px-3 py-2 bg-slate-700 border border-purple-500/30 rounded text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+              disabled={adding}
+            />
+            <button
+              onClick={handleAddUsers}
+              disabled={adding || !usernamesInput.trim()}
+              className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 rounded text-purple-400 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {adding ? (
+                <span>Đang thêm...</span>
+              ) : (
+                <span>+ Thêm</span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Users List */}
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="py-8 text-center text-slate-400">Loading...</div>
+          ) : marketingUsers.length === 0 ? (
+            <div className="py-8 text-center text-slate-400">
+              Chưa có marketing users
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* marketingUsers is now array of strings */}
+              {marketingUsers.map((username, index) => (
+                <div
+                  key={index}
+                  className="bg-slate-700/50 rounded-lg p-3 border border-purple-500/30 flex items-center justify-between hover:bg-slate-700/70 transition-all"
+                >
+                  <div className="flex-1">
+                    <div className="text-sm text-white font-medium">{username}</div>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveUser(username)}
+                    disabled={removing === username}
+                    className="ml-4 p-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-red-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Xóa khỏi marketing"
+                  >
+                    {removing === username ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 pt-4 border-t border-slate-700">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm transition-all"
+          >
+            Đóng
           </button>
         </div>
       </div>
