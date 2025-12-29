@@ -473,13 +473,11 @@ function Swap() {
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{formatCurrency(swap.fromAmount, swap.from)}</span>
-                          <span className="text-emerald-300/60 dark:text-emerald-400/60">{swap.from}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{formatCurrency(swap.toAmount, swap.to)}</span>
-                          <span className="text-emerald-300/60 dark:text-emerald-400/60">{swap.to}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80 whitespace-nowrap">
