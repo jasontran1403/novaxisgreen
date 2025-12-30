@@ -232,6 +232,7 @@ function InvestmentManagement() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Progress</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Date</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Status</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">POP Commisison</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Actions</th>
               </tr>
             </thead>
@@ -305,6 +306,16 @@ function InvestmentManagement() {
                         <span className="text-blue-400">✓ Completed</span>
                       ) : (
                         <span className="text-slate-400">{investment.status}</span>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs">
+                      {investment.isLockPop ? (
+                        <div>
+                          <span className="block text-red-400 font-medium">🚫 Locked</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">Available</span>
                       )}
                     </td>
 

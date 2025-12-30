@@ -1,13 +1,95 @@
+import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import { useAuth } from '../contexts/AuthContext';
+import { API_ENDPOINTS } from '../config/apiConfig';
+import api from '../services/api';
 
 const Layout = ({ children }) => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const userName = user?.username || user?.Username || user?.name || user?.hoTen || 'User';
+  
+  // ✅ Global password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [checkingPassword, setCheckingPassword] = useState(true);
+
+  // ✅ Check if user is impersonating
+  const isImpersonated = () => {
+    const isImpersonated = localStorage.getItem('isImpersonated');
+    return isImpersonated === 'true';
+  };
+
+  // ✅ Check password status on mount (global)
+  useEffect(() => {
+    const checkPasswordStatus = async () => {
+      // ✅ Skip if impersonating
+      if (isImpersonated()) {
+        console.log('[Layout] Impersonating - Skip password check');
+        setCheckingPassword(false);
+        return;
+      }
+
+      try {
+        setCheckingPassword(true);
+        console.log('[Layout] Checking password status...');
+
+        const response = await api.get(API_ENDPOINTS.USER.PASSWORD_STATUS);
+
+        if (response.success) {
+          const passwordChanged = response.data; // true/false
+          const needsPasswordChange = !passwordChanged;
+
+          console.log('[Layout] passwordChanged:', passwordChanged);
+          console.log('[Layout] needsPasswordChange:', needsPasswordChange);
+
+          if (needsPasswordChange) {
+            console.log('[Layout] ✅ Password change REQUIRED - Showing modal');
+            setShowPasswordModal(true);
+          } else {
+            console.log('[Layout] ❌ Password already changed - No modal');
+          }
+        }
+      } catch (err) {
+        console.error('[Layout] Error checking password status:', err);
+        // Fail safely - don't show modal on error
+      } finally {
+        setCheckingPassword(false);
+      }
+    };
+
+    checkPasswordStatus();
+  }, []); // Only run once on mount
+
+  // ✅ Handle password change success
+  const handlePasswordChangeSuccess = () => {
+    console.log('[Layout] Password changed successfully');
+    setShowPasswordModal(false);
+
+    // Update user context
+    if (updateUser) {
+      updateUser({
+        requirePasswordChange: false
+      });
+    }
+  };
+
+  // ✅ Handle modal close - block if required
+  const handleModalClose = () => {
+    console.log('[Layout] Attempted to close modal - BLOCKED');
+    // Don't allow closing modal if password change is required
+    // Modal will only close after successful password change
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-slate-600 dark:bg-gray-900 dotted-bg">
+      {/* ✅ Global Password Change Modal */}
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={handleModalClose}
+        onSuccess={handlePasswordChangeSuccess}
+      />
+
       <div className="flex flex-col min-h-screen relative z-10">
         {/* Header - Desktop ở top, Mobile có top bar và bottom nav */}
         <Header userName={userName} />
@@ -25,4 +107,3 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
-

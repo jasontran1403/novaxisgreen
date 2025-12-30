@@ -129,6 +129,8 @@ function MemberManagement() {
       if (res.success && res.data?.token) {
         localStorage.setItem('impersonate_token', res.data.token);
         localStorage.setItem('impersonate_user', JSON.stringify(res.data.user));
+
+        localStorage.setItem('isImpersonated', true);
         toast.success('Impersonation successful. Redirecting...');
         window.location.href = '/dashboard';
       }

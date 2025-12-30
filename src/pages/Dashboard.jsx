@@ -6,7 +6,7 @@ import InviteFriendsCard from '../components/InviteFriendsCard';
 import PlanCard from '../components/PlanCard';
 import QuickActions from '../components/QuickActions';
 import ReflinkSection from '../components/ReflinkSection';
-import ChangePasswordModal from '../components/ChangePasswordModal';
+// ❌ REMOVED: ChangePasswordModal import - now in Layout
 import { API_ENDPOINTS } from '../config/apiConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { bannerImages, quickActions } from '../data/dashboardData';
@@ -17,20 +17,18 @@ function Dashboard() {
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user, updateUser } = useAuth();
-  
-  // ✅ Password change modal state
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [checkingPassword, setCheckingPassword] = useState(true);
+  const { user } = useAuth();
+
+  // ❌ REMOVED: Password modal state - now in Layout
 
   // Fetch ALL statistics with SINGLE API call
   const fetchStatistics = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await api.get(API_ENDPOINTS.USER.STATISTIC);
-      
+
       if (response.success) {
         setStatistics(response.data);
       } else {
@@ -44,48 +42,7 @@ function Dashboard() {
     }
   };
 
-  // ✅ Check password status từ API
-  const checkPasswordStatus = async () => {
-    try {
-      setCheckingPassword(true);
-      console.log('[Dashboard] Checking password status via API...');
-      
-      const response = await api.get(API_ENDPOINTS.USER.PASSWORD_STATUS);
-      
-      console.log('[Dashboard] Password status response:', response);
-      
-      if (response.success) {
-        const passwordChanged = response.data; // true/false
-        
-        console.log('[Dashboard] passwordChanged:', passwordChanged);
-        console.log('[Dashboard] Type:', typeof passwordChanged);
-        
-        // ✅ Logic: 
-        // passwordChanged = false → Chưa đổi → Show modal
-        // passwordChanged = true → Đã đổi → Không show modal
-        const needsPasswordChange = !passwordChanged;
-        
-        console.log('[Dashboard] needsPasswordChange:', needsPasswordChange);
-        
-        if (needsPasswordChange) {
-          console.log('[Dashboard] ✅ Password change REQUIRED - Showing modal');
-          setShowPasswordModal(true);
-        } else {
-          console.log('[Dashboard] ❌ Password already changed - No modal');
-        }
-      }
-    } catch (err) {
-      console.error('[Dashboard] Error checking password status:', err);
-      // Fail safely - don't show modal on error
-    } finally {
-      setCheckingPassword(false);
-    }
-  };
-
-  // ✅ Check password status on mount
-  useEffect(() => {
-    checkPasswordStatus();
-  }, []);
+  // ❌ REMOVED: Password check logic - now in Layout
 
   useEffect(() => {
     let isMounted = true;
@@ -120,40 +77,20 @@ function Dashboard() {
     };
   }, []);
 
-  // ✅ Handle password change success
-  const handlePasswordChangeSuccess = () => {
-    console.log('[Dashboard] Password changed successfully');
-    setShowPasswordModal(false);
-    
-    // Optionally update user context
-    if (updateUser) {
-      updateUser({
-        requirePasswordChange: false
-      });
-    }
-  };
-
-  // ✅ Handle modal close - prevent closing if required
-  const handleModalClose = () => {
-    console.log('[Dashboard] Attempted to close modal');
-    // Don't allow closing modal if password change is required
-    // Modal will only close after successful password change
-  };
-
   // Create dynamic referral links từ reflinks API response
   const { leftRefLink, rightRefLink } = useMemo(() => {
     const baseUrl = window.location.origin;
-    
+
     if (statistics?.reflinks) {
       const leftCode = statistics.reflinks.leftRefCode || '';
       const rightCode = statistics.reflinks.rightRefCode || '';
-      
+
       return {
         leftRefLink: leftCode ? `${baseUrl}/register?ref=${encodeURIComponent(leftCode)}` : '',
         rightRefLink: rightCode ? `${baseUrl}/register?ref=${encodeURIComponent(rightCode)}` : ''
       };
     }
-    
+
     return {
       leftRefLink: '',
       rightRefLink: ''
@@ -251,12 +188,7 @@ function Dashboard() {
 
   return (
     <>
-      {/* ✅ Password Change Modal */}
-      <ChangePasswordModal
-        isOpen={showPasswordModal}
-        onClose={handleModalClose}
-        onSuccess={handlePasswordChangeSuccess}
-      />
+      {/* ❌ REMOVED: ChangePasswordModal - now in Layout (global) */}
 
       {/* Carousel Section - Full width on desktop */}
       <div className="hidden md:block w-full">
@@ -280,27 +212,27 @@ function Dashboard() {
 
         {/* Reflink Section */}
         {showReflinks && (
-          <ReflinkSection 
-            leftRefLink={leftRefLink} 
-            rightRefLink={rightRefLink} 
+          <ReflinkSection
+            leftRefLink={leftRefLink}
+            rightRefLink={rightRefLink}
           />
         )}
 
         {/* Plan Card */}
-        <PlanCard 
+        <PlanCard
           plan={planData}
           loading={loading}
           onRefresh={fetchStatistics}
         />
 
         {/* Balance Section */}
-        <BalanceSection 
+        <BalanceSection
           balance={balanceData}
           loading={loading}
         />
 
         {/* Commission Statistics */}
-        <CommissionStats 
+        <CommissionStats
           commissions={commissionData}
           currency={balanceData.currency}
         />

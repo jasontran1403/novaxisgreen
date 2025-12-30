@@ -13,45 +13,90 @@ export const useAuth = () => {
   return context;
 };
 
+// Helper để lấy token & user đúng theo trạng thái impersonate
+const getAuthToken = () => {
+  const impersonateToken = localStorage.getItem('impersonate_token');
+  if (impersonateToken) return impersonateToken;
+  return localStorage.getItem(STORAGE_KEYS.TOKEN);
+};
+
+const getSavedUser = () => {
+  const impersonateUserStr = localStorage.getItem('impersonate_user');
+  if (impersonateUserStr) {
+    try {
+      return JSON.parse(impersonateUserStr);
+    } catch {
+      return null;
+    }
+  }
+
+  const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+const isImpersonating = () => !!localStorage.getItem('impersonate_token');
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getSavedUser());
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!getAuthToken());
   const navigate = useNavigate();
 
-  // Initialize: Check token and load user
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
-      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
+      const token = getAuthToken();
 
-      if (token && savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-          setIsAuthenticated(true);
-          
-          // Verify token với server
-          try {
-            const data = await api.get(API_ENDPOINTS.AUTH.ME);
-            if (data.success) {
-              setUser(data.data.user);
-              localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data.user));
-            }
-          } catch (error) {
-            // Token không hợp lệ, clear và logout
-            logout();
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Có token → coi như đã auth ngay lập tức (tránh flash màn hình)
+      setIsAuthenticated(true);
+
+      // Lấy user từ storage làm fallback ban đầu
+      const savedUser = getSavedUser();
+      if (savedUser) {
+        setUser(savedUser);
+      }
+
+      // Luôn verify với /me (vì backend hỗ trợ trả về user đúng theo token)
+      try {
+        const data = await api.get(API_ENDPOINTS.AUTH.ME);
+
+        if (data.success) {
+          const freshUser = data.data.user;
+          setUser(freshUser);
+
+          // Lưu lại user mới nhất vào storage phù hợp
+          if (isImpersonating()) {
+            const token = localStorage.getItem('impersonate_token');
+            const user = localStorage.getItem('impersonate_user');
+            localStorage.setItem('user', user);
+            localStorage.setItem('token', token);
+          } else {
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(freshUser));
           }
-        } catch (error) {
-          console.error('Error loading user:', error);
+        } else {
           logout();
         }
+      } catch (error) {
+        console.warn('Verify /me failed:', error.message);
+        logout();
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
 
-    // Listen for unauthorized events
     const handleUnauthorized = () => {
       logout();
       navigate('/login');
@@ -64,14 +109,8 @@ export const AuthProvider = ({ children }) => {
     };
   }, [navigate]);
 
-  /**
-   * Login
-   * @param {string} identifier - Email or username
-   * @param {string} password - Password
-   */
   const login = async (identifier, password) => {
     try {
-      // Determine if it's email or username
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
       const loginData = isEmail 
         ? { email: identifier, password }
@@ -80,6 +119,10 @@ export const AuthProvider = ({ children }) => {
       const data = await api.post(API_ENDPOINTS.AUTH.LOGIN, loginData, false);
       
       if (data.success) {
+        // Clear impersonate khi login mới
+        localStorage.removeItem('impersonate_token');
+        localStorage.removeItem('impersonate_user');
+
         localStorage.setItem(STORAGE_KEYS.TOKEN, data.data.token);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data.user));
         setUser(data.data.user);
@@ -93,14 +136,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Register
-   */
   const register = async (userData) => {
     try {
       const data = await api.post(API_ENDPOINTS.AUTH.REGISTER, userData, false);
       
       if (data.success) {
+        localStorage.removeItem('impersonate_token');
+        localStorage.removeItem('impersonate_user');
+
         localStorage.setItem(STORAGE_KEYS.TOKEN, data.data.token);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data.user));
         setUser(data.data.user);
@@ -114,27 +157,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Logout
-   */
   const logout = () => {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem('impersonate_token');
+    localStorage.removeItem('impersonate_user');
+    localStorage.removeItem('isImpersonated');
     setUser(null);
     setIsAuthenticated(false);
     navigate('/login');
   };
 
-  /**
-   * Get current user information
-   */
   const getCurrentUser = async () => {
     try {
       const data = await api.get(API_ENDPOINTS.AUTH.ME);
       if (data.success) {
-        setUser(data.data.user);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data.user));
-        return { success: true, user: data.data.user };
+        const freshUser = data.data.user;
+        setUser(freshUser);
+
+        if (isImpersonating()) {
+          localStorage.setItem('impersonate_user', JSON.stringify(freshUser));
+        } else {
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(freshUser));
+        }
+
+        return { success: true, user: freshUser };
       }
       return { success: false, error: data.error || data.message };
     } catch (error) {
@@ -142,12 +189,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Update user information
-   */
   const updateUser = (userData) => {
     setUser(userData);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    const storageKey = isImpersonating() ? 'impersonate_user' : STORAGE_KEYS.USER;
+    localStorage.setItem(storageKey, JSON.stringify(userData));
   };
 
   const value = {
@@ -159,8 +204,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     getCurrentUser,
     updateUser,
+    isImpersonating,  // Để các component khác kiểm tra nếu cần
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
