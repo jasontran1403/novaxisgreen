@@ -534,33 +534,6 @@ function MemberManagement() {
             </div>
             <div className="flex gap-2 mt-6 flex-wrap">
               <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setShowBalanceModal(true);
-                }}
-                className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 rounded text-orange-400 text-sm"
-              >
-                Thay đổi số dư
-              </button>
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setShowLockModal(true);
-                }}
-                className="px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded text-yellow-400 text-sm"
-              >
-                Manage Locks
-              </button>
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setShowUpdateModal(true);
-                }}
-                className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded text-green-400 text-sm"
-              >
-                Edit Member
-              </button>
-              <button
                 onClick={() => setShowDetailModal(false)}
                 className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm"
               >
@@ -608,11 +581,6 @@ function LockStatusModal({ member, onClose, onSave }) {
     lockWithdraw: member?.lockWithdraw || false,
     lockTransfer: member?.lockTransfer || false,
     lockSwap: member?.lockSwap || false,
-    lockDailyInterest: member?.lockDailyInterest || false,
-    lockDirectCommission: member?.lockDirectCommission || false,
-    lockBinaryCommission: member?.lockBinaryCommission || false,
-    lockLeaderCommission: member?.lockLeaderCommission || false,
-    lockPOPCommission: member?.lockPOPCommission || false,
     lockAccount: member?.lockAccount || false,
   });
 

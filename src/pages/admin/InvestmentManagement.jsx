@@ -15,11 +15,14 @@ function InvestmentManagement() {
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revoking, setRevoking] = useState(false);
-  
+
   // Marketing users state
   const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [marketingUsers, setMarketingUsers] = useState([]);
   const [loadingMarketing, setLoadingMarketing] = useState(false);
+
+  const [showLockPopModal, setShowLockPopModal] = useState(false);
+  const [lockingPop, setLockingPop] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -115,10 +118,32 @@ function InvestmentManagement() {
     }
   };
 
+  const handleLockPop = async (investmentId) => {
+    try {
+      setLockingPop(true);
+      // Endpoint thực tế - thay bằng endpoint backend của bạn
+      // Ví dụ: POST /api/admin/investments/{id}/lock-pop
+      const res = await api.get(API_ENDPOINTS.ADMIN.INVESTMENT_LOCK_POP(investmentId));
+
+      if (res.success) {
+        toast.success(res.message || 'Đã khóa POP Commission thành công');
+        setShowLockPopModal(false);
+        fetchInvestments(); // Reload bảng
+      } else {
+        toast.error(res.message || res.error || 'Không thể khóa POP Commission');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Lỗi khi khóa POP Commission');
+      console.error('Lock POP error:', err);
+    } finally {
+      setLockingPop(false);
+    }
+  };
+
   // ========================================
   // MARKETING USERS FUNCTIONS
   // ========================================
-  
+
   const fetchMarketingUsers = async () => {
     try {
       setLoadingMarketing(true);
@@ -167,7 +192,7 @@ function InvestmentManagement() {
       <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-4 md:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-emerald-400">Investment Management</h2>
-          
+
           {/* Marketing Users Button */}
           <button
             onClick={handleShowMarketingModal}
@@ -234,7 +259,6 @@ function InvestmentManagement() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Date</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Status</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">POP Commisison</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -297,9 +321,6 @@ function InvestmentManagement() {
                       {investment.isRevoked ? (
                         <div>
                           <span className="block text-red-400 font-medium">🚫 Revoked</span>
-                          <span className="text-slate-500 text-[10px]">
-                            by {investment.revokedBy || 'admin'}
-                          </span>
                         </div>
                       ) : investment.status === 'Active' ? (
                         <span className="text-green-400">✓ Active</span>
@@ -310,40 +331,22 @@ function InvestmentManagement() {
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-xs">
-                      {investment.isLockPop ? (
-                        <div>
-                          <span className="block text-red-400 font-medium">🚫 Locked</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">Available</span>
-                      )}
-                    </td>
-
-                    <td className="py-3 px-4 text-xs">
+                    <td className="py-3 px-4 text-xs flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
                           setSelectedInvestment(investment);
-                          setShowRevokeModal(true);
+                          setShowLockPopModal(true);
                         }}
-                        disabled={investment.isRevoked || revoking}
-                        className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 ${investment.isRevoked
+                        disabled={investment.isLockPop || lockingPop}
+                        className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 min-w-[80px] justify-center
+      ${investment.isLockPop || lockingPop
                             ? 'bg-slate-700/50 border-slate-600 text-slate-500 cursor-not-allowed'
-                            : 'bg-orange-500/20 hover:bg-orange-500/30 border-orange-500/30 hover:border-orange-500/50 text-orange-400'
+                            : 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 hover:border-purple-500/50 text-purple-400 cursor-pointer'
                           }`}
-                        title={investment.isRevoked ? 'Already revoked' : 'Thu hồi gói'}
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
                         <span className="text-[10px] font-medium hidden sm:inline">
-                          {investment.isRevoked ? 'Revoked' : 'Thu hồi'}
+                          {investment.isLockPop ? '🚫  Locked' : 'Lock POP'}
                         </span>
-                        {!investment.isRevoked && (
-                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
-                            Thu hồi hoa hồng/doanh số
-                          </span>
-                        )}
                       </button>
                     </td>
                   </tr>
@@ -384,6 +387,15 @@ function InvestmentManagement() {
           onClose={() => setShowRevokeModal(false)}
           onConfirm={() => handleRevokeInvestment(selectedInvestment.id)}
           loading={revoking}
+        />
+      )}
+
+      {showLockPopModal && selectedInvestment && (
+        <LockPopConfirmationModal
+          investment={selectedInvestment}
+          onClose={() => setShowLockPopModal(false)}
+          onConfirm={() => handleLockPop(selectedInvestment.id)}
+          loading={lockingPop}
         />
       )}
 
@@ -622,6 +634,60 @@ function MarketingUsersModal({ marketingUsers, loading, onClose, onRefresh, toas
             className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm transition-all"
           >
             Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Lock POP Confirmation Modal
+function LockPopConfirmationModal({ investment, onClose, onConfirm, loading }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 border border-purple-500/50 rounded-lg p-6 max-w-md w-full">
+        <h3 className="text-xl font-semibold text-purple-400 mb-4">🔒 Xác nhận khóa POP Commission</h3>
+
+        <div className="space-y-4 mb-6">
+          <div className="bg-slate-700/50 rounded p-4 border border-emerald-500/30">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="text-slate-400">ID:</div>
+              <div className="text-white font-medium">{investment.id}</div>
+              <div className="text-slate-400">Username:</div>
+              <div className="text-emerald-400 font-medium">{investment.username}</div>
+              <div className="text-slate-400">Package:</div>
+              <div className="text-white">{investment.packageName}</div>
+              <div className="text-slate-400">Amount:</div>
+              <div className="text-blue-400 font-medium">{formatCurrency(investment.amount, 'USDT')}</div>
+            </div>
+          </div>
+
+          <div className="bg-purple-900/20 border border-purple-500/50 rounded p-4">
+            <div className="text-purple-300 text-sm">
+              <p className="font-semibold">Hành động này sẽ:</p>
+              <ul className="list-disc list-inside text-xs mt-2 space-y-1">
+                <li>Khóa vĩnh viễn POP Commission của gói</li>
+                <li>Không ảnh hưởng đến Daily Interest</li>
+              </ul>
+              <p className="font-bold mt-3 text-yellow-400">Không thể hoàn tác!</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-purple-600/40 hover:bg-purple-600/60 border border-purple-500 rounded text-purple-200 font-medium disabled:opacity-50 transition-colors"
+          >
+            {loading ? 'Đang khóa...' : '🔒 Xác nhận khóa POP'}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 disabled:opacity-50"
+          >
+            Hủy
           </button>
         </div>
       </div>

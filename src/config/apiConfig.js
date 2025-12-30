@@ -86,6 +86,7 @@ export const API_ENDPOINTS = {
 
     INVESTMENTS: '/api/admin/investments',
     INVESTMENT_REVOKE: (id) => `/api/admin/revoke/${id}`,
+    INVESTMENT_LOCK_POP: (id) => `/api/admin/lock-pop/${id}`,
     MARKETING_USER: '/api/admin/marketing-users',
     ADD_MARKETING_USER: '/api/admin/marketing-add',
     REMOVE_MARKETING_USER: (username) => `/api/admin/marketing-remove/${username}`,
