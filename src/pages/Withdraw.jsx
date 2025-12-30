@@ -231,13 +231,17 @@ function Withdraw() {
 
   const confirmCancel = async () => {
     try {
-      await ApiService.post(API_ENDPOINTS.USER.CANCEL_WITHDRAW, {
-        withdrawId: cancelModal.id,
-      });
-      toast.success('Withdrawal cancelled successfully');
-      setCancelModal({ open: false, id: null, amount: 0, token: '' });
-      await fetchWithdrawHistory(currentPage);
-      await fetchBalances();
+      const res = await ApiService.get(API_ENDPOINTS.USER.CANCEL_WITHDRAW(cancelModal.id));
+
+      // Kiểm tra success từ response
+      if (res.success) {
+        toast.success(res.message || 'Withdrawal cancelled successfully');
+        setCancelModal({ open: false, id: null, amount: 0, token: '' });
+        await fetchWithdrawHistory(currentPage);
+        await fetchBalances();
+      } else {
+        toast.error(res.message || 'Failed to cancel withdrawal');
+      }
     } catch (err) {
       toast.error(err?.message || 'Failed to cancel withdrawal');
     }

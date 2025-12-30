@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
     GET_BINARY_COMMISSION: '/api/user/binary-commission',
     GET_LEADERSHIP_COMMISSION: '/api/user/leadership-commission',
     GET_POP_COMMISSION: '/api/user/pop-commission',
+    CANCEL_WITHDRAW: (withdrawId) => `/api/user/cancel-withdraw/${withdrawId}`
   },
 
   // Income

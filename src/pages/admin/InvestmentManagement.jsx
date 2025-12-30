@@ -81,7 +81,6 @@ function InvestmentManagement() {
   };
 
   const handleRevokeInvestment = async (investmentId) => {
-    return;
     try {
       setRevoking(true);
       const res = await api.post(API_ENDPOINTS.ADMIN.INVESTMENT_REVOKE(investmentId));
@@ -257,8 +256,7 @@ function InvestmentManagement() {
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Daily Rate</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Progress</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Date</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Status</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">POP Commisison</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -317,20 +315,6 @@ function InvestmentManagement() {
                       {formatDate(investment.investmentDate)}
                     </td>
 
-                    <td className="py-3 px-4 text-xs">
-                      {investment.isRevoked ? (
-                        <div>
-                          <span className="block text-red-400 font-medium">🚫 Revoked</span>
-                        </div>
-                      ) : investment.status === 'Active' ? (
-                        <span className="text-green-400">✓ Active</span>
-                      ) : investment.status === 'Completed' ? (
-                        <span className="text-blue-400">✓ Completed</span>
-                      ) : (
-                        <span className="text-slate-400">{investment.status}</span>
-                      )}
-                    </td>
-
                     <td className="py-3 px-4 text-xs flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
@@ -346,6 +330,22 @@ function InvestmentManagement() {
                       >
                         <span className="text-[10px] font-medium hidden sm:inline">
                           {investment.isLockPop ? '🚫  Locked' : 'Lock POP'}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedInvestment(investment);
+                          setShowLockPopModal(true);
+                        }}
+                        disabled={investment.isLockPop || lockingPop}
+                        className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 min-w-[80px] justify-center
+      ${investment.isLockPop || lockingPop
+                            ? 'bg-slate-700/50 border-slate-600 text-slate-500 cursor-not-allowed'
+                            : 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 hover:border-purple-500/50 text-purple-400 cursor-pointer'
+                          }`}
+                      >
+                        <span className="text-[10px] font-medium hidden sm:inline">
+                          {investment.isLockPop ? '🚫  Revoked' : 'Revoke commission'}
                         </span>
                       </button>
                     </td>
