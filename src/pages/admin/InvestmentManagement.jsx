@@ -78,6 +78,7 @@ function InvestmentManagement() {
   };
 
   const handleRevokeInvestment = async (investmentId) => {
+    return;
     try {
       setRevoking(true);
       const res = await api.post(API_ENDPOINTS.ADMIN.INVESTMENT_REVOKE(investmentId));
