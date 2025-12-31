@@ -154,48 +154,6 @@ function AdminDashboard() {
           ))}
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-6">
-        <h3 className="text-lg font-semibold text-emerald-400 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <a
-            href="/admin/deposits"
-            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">💰</div>
-            <div className="text-sm text-emerald-400">Deposit Management</div>
-          </a>
-          <a
-            href="/admin/withdraws"
-            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">💸</div>
-            <div className="text-sm text-emerald-400">Withdraw Management</div>
-          </a>
-          <a
-            href="/admin/members"
-            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">👥</div>
-            <div className="text-sm text-emerald-400">Member Management</div>
-          </a>
-          <a
-            href="/admin/investments"
-            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">💼</div>
-            <div className="text-sm text-emerald-400">Investment Management</div>
-          </a>
-          <a
-            href="/admin/settings"
-            className="bg-slate-700/50 hover:bg-slate-700 border border-emerald-500/30 rounded-lg p-4 text-center transition-colors"
-          >
-            <div className="text-2xl mb-2">⚙️</div>
-            <div className="text-sm text-emerald-400">Settings</div>
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

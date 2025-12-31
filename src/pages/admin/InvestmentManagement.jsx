@@ -316,6 +316,7 @@ function InvestmentManagement() {
                     </td>
 
                     <td className="py-3 px-4 text-xs flex gap-2 flex-wrap">
+                      {/* Button Lock POP - màu tím */}
                       <button
                         onClick={() => {
                           setSelectedInvestment(investment);
@@ -325,28 +326,52 @@ function InvestmentManagement() {
                         className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 min-w-[80px] justify-center
       ${investment.isLockPop || lockingPop
                             ? 'bg-slate-700/50 border-slate-600 text-slate-500 cursor-not-allowed'
-                            : 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 hover:border-purple-500/50 text-purple-400 cursor-pointer'
+                            : 'bg-purple-500/20 hover:bg-purple-600/30 border-purple-500/50 hover:border-purple-400 text-purple-300 hover:text-purple-200 cursor-pointer'
                           }`}
+                        title={investment.isLockPop ? 'POP Commission đã bị khóa' : 'Khóa POP Commission'}
                       >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                         <span className="text-[10px] font-medium hidden sm:inline">
-                          {investment.isLockPop ? '🚫  Locked' : 'Lock POP'}
+                          {investment.isLockPop ? '🚫 Locked' : 'Lock POP'}
                         </span>
+
+                        {/* Tooltip */}
+                        {!investment.isLockPop && !lockingPop && (
+                          <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-slate-700 whitespace-nowrap">
+                            Khóa vĩnh viễn POP Commission
+                          </span>
+                        )}
                       </button>
+
+                      {/* Button Revoke - màu đỏ */}
                       <button
                         onClick={() => {
                           setSelectedInvestment(investment);
-                          setShowLockPopModal(true);
+                          setShowRevokeModal(true); // Giả sử bạn dùng modal Revoke riêng
                         }}
-                        disabled={investment.isLockPop || lockingPop}
+                        disabled={investment.isRevoked || revoking}
                         className={`group relative px-2.5 py-1.5 border rounded transition-all flex items-center gap-1.5 min-w-[80px] justify-center
-      ${investment.isLockPop || lockingPop
+      ${investment.isRevoked || revoking
                             ? 'bg-slate-700/50 border-slate-600 text-slate-500 cursor-not-allowed'
-                            : 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 hover:border-purple-500/50 text-purple-400 cursor-pointer'
+                            : 'bg-red-500/20 hover:bg-red-600/30 border-red-500/50 hover:border-red-400 text-red-300 hover:text-red-200 cursor-pointer'
                           }`}
+                        title={investment.isRevoked ? 'Gói đã bị thu hồi' : 'Thu hồi commission'}
                       >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <span className="text-[10px] font-medium hidden sm:inline">
-                          {investment.isLockPop ? '🚫  Revoked' : 'Revoke commission'}
+                          {investment.isRevoked ? 'Revoked' : 'Revoke'}
                         </span>
+
+                        {/* Tooltip */}
+                        {!investment.isRevoked && !revoking && (
+                          <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-slate-700 whitespace-nowrap">
+                            Thu hồi commission & doanh số
+                          </span>
+                        )}
                       </button>
                     </td>
                   </tr>

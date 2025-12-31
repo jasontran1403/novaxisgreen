@@ -155,7 +155,7 @@ function InterestProfit() {
                     </td>
                     <td className="py-3 px-4 text-xs text-emerald-300/80 dark:text-emerald-400/80">
                       <div className="">{item.member || '—'}</div>
-                      <div className="">Distance: F{item.level || '—'}</div>
+                      <div className="">Level {item.level || '—'}</div>
                     </td>
                     <td className="py-3 px-4 text-xs text-green-400 dark:text-green-300 font-semibold">
                       <div className="">+{formatCurrency(item.commission || 0, 'Nova')}</div>

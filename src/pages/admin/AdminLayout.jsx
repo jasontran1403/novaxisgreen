@@ -32,10 +32,10 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/binary-tree', label: 'Binary Tree', icon: '🌳' },
     { path: '/admin/deposits', label: 'Deposit Management', icon: '💰' },
     { path: '/admin/withdraws', label: 'Withdraw Management', icon: '💸' },
-    { path: '/admin/commission-settings', label: 'Commission Settings', icon: '⚙️' },
+    // { path: '/admin/commission-settings', label: 'Commission Settings', icon: '⚙️' },
     { path: '/admin/settings', label: 'Settings', icon: '🔧' },
     { path: '/admin/wallet-config', label: 'Wallet Config', icon: '🔐' },
-    { path: '/admin/reset-rebuild', label: 'Reset & Rebuild', icon: '🔄' },
+    // { path: '/admin/reset-rebuild', label: 'Reset & Rebuild', icon: '🔄' },
   ];
 
   const isActive = (path) => location.pathname === path;

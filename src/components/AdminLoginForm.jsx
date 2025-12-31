@@ -5,14 +5,19 @@ import api from '../services/api';
 function AdminLoginForm() {
   const [formData, setFormData] = useState({
     identifier: '', // Email hoặc username
-    password: ''
+    password: '',
+    twoFactorCode: '' // Mã 2FA
   });
   const [errors, setErrors] = useState({
     identifier: '',
     password: '',
+    twoFactorCode: '',
     general: ''
   });
   const [loading, setLoading] = useState(false);
+
+  // State để toggle show/hide password
+  const [showPassword, setShowPassword] = useState(false);
 
   // Validation functions
   const validateIdentifier = (identifier) => {
@@ -29,6 +34,17 @@ function AdminLoginForm() {
     return '';
   };
 
+  const validateTwoFactorCode = (code) => {
+    const trimmed = code.trim();
+    if (!trimmed) {
+      return 'Vui lòng nhập mã 2FA';
+    }
+    if (!/^\d{6}$/.test(trimmed)) {
+      return 'Mã 2FA phải là 6 chữ số';
+    }
+    return '';
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -36,7 +52,6 @@ function AdminLoginForm() {
       [name]: value
     });
     
-    // Clear errors when user is typing
     setErrors({
       ...errors,
       [name]: '',
@@ -52,6 +67,8 @@ function AdminLoginForm() {
       error = validateIdentifier(value);
     } else if (name === 'password') {
       error = validatePassword(value);
+    } else if (name === 'twoFactorCode') {
+      error = validateTwoFactorCode(value);
     }
 
     setErrors({
@@ -63,21 +80,22 @@ function AdminLoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Reset errors
     setErrors({
       identifier: '',
       password: '',
+      twoFactorCode: '',
       general: ''
     });
 
-    // Validate form
     const identifierError = validateIdentifier(formData.identifier);
     const passwordError = validatePassword(formData.password);
+    const twoFactorError = validateTwoFactorCode(formData.twoFactorCode);
 
-    if (identifierError || passwordError) {
+    if (identifierError || passwordError || twoFactorError) {
       setErrors({
         identifier: identifierError,
         password: passwordError,
+        twoFactorCode: twoFactorError,
         general: ''
       });
       return;
@@ -86,51 +104,62 @@ function AdminLoginForm() {
     setLoading(true);
 
     try {
-      // Determine if identifier is email or username
       const isEmail = formData.identifier.includes('@');
       const loginData = isEmail
-        ? { email: formData.identifier, password: formData.password }
-        : { username: formData.identifier, password: formData.password };
+        ? { 
+            email: formData.identifier, 
+            password: formData.password,
+            twoFactorCode: formData.twoFactorCode.trim() 
+          }
+        : { 
+            username: formData.identifier, 
+            password: formData.password,
+            twoFactorCode: formData.twoFactorCode.trim() 
+          };
 
-      // Call admin login API
       const result = await api.post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, loginData, false);
 
       if (result.success && result.data?.token) {
-        // Save token and user info
-
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
-          
-          // Login successful, redirect to admin dashboard
         window.location.href = '/admin/dashboard';
-        } else {
-            setErrors({
-              identifier: '',
-              password: '',
+      } else {
+        setErrors({
+          identifier: '',
+          password: '',
+          twoFactorCode: '',
           general: result.error || 'Đăng nhập thất bại'
-          });
+        });
       }
     } catch (err) {
-      // Handle error from API
       const errorMessage = err.message || 'Đăng nhập thất bại';
       
-      // Check error type to display appropriately
       if (errorMessage.includes('không đúng') || errorMessage.includes('incorrect')) {
         setErrors({
           identifier: '',
           password: '',
-          general: 'Email/Username hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.'
+          twoFactorCode: '',
+          general: 'Email/Username hoặc mật khẩu không đúng.'
+        });
+      } else if (errorMessage.includes('2FA') || errorMessage.includes('mã xác thực')) {
+        setErrors({
+          identifier: '',
+          password: '',
+          twoFactorCode: 'Mã 2FA không đúng hoặc đã hết hạn',
+          general: ''
         });
       } else if (errorMessage.includes('không có quyền') || errorMessage.includes('Forbidden')) {
         setErrors({
           identifier: '',
           password: '',
-          general: 'Bạn không có quyền truy cập trang admin. Vui lòng đăng nhập bằng tài khoản admin.'
+          twoFactorCode: '',
+          general: 'Bạn không có quyền truy cập trang admin.'
         });
       } else {
         setErrors({
           identifier: '',
           password: '',
+          twoFactorCode: '',
           general: errorMessage
         });
       }
@@ -149,7 +178,7 @@ function AdminLoginForm() {
       </div>
 
       <form className="relative z-10 space-y-6" onSubmit={handleSubmit}>
-        {/* General Error Message */}
+        {/* General Error */}
         {errors.general && (
           <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm flex items-start">
             <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -159,9 +188,9 @@ function AdminLoginForm() {
           </div>
         )}
 
-        {/* Email or Username */}
+        {/* Identifier */}
         <div>
-          <label htmlFor="identifier" className="block text-sm font-medium text-gray-300 dark:text-gray-300 mb-2">
+          <label htmlFor="identifier" className="block text-sm font-medium text-gray-300 mb-2">
             Email hoặc Username <span className="text-red-400">*</span>
           </label>
           <input
@@ -172,10 +201,10 @@ function AdminLoginForm() {
             value={formData.identifier}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`w-full px-4 py-3 bg-slate-600/50 dark:bg-gray-700/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+            className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
               errors.identifier 
                 ? 'border-red-500/50 focus:ring-red-500' 
-                : 'border-emerald-500/30 dark:border-emerald-400/30 focus:ring-emerald-500'
+                : 'border-emerald-500/30 focus:ring-emerald-500'
             }`}
             placeholder="Nhập email hoặc username của bạn"
           />
@@ -189,32 +218,81 @@ function AdminLoginForm() {
           )}
         </div>
 
-        {/* Password */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300 dark:text-gray-300 mb-2">
+        {/* Password với toggle */}
+        <div className="relative">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
             Mật khẩu <span className="text-red-400">*</span>
           </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            value={formData.password}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={`w-full px-4 py-3 bg-slate-600/50 dark:bg-gray-700/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-              errors.password 
-                ? 'border-red-500/50 focus:ring-red-500' 
-                : 'border-emerald-500/30 dark:border-emerald-400/30 focus:ring-emerald-500'
-            }`}
-            placeholder="Nhập mật khẩu của bạn"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              value={formData.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all pr-10 ${
+                errors.password 
+                  ? 'border-red-500/50 focus:ring-red-500' 
+                  : 'border-emerald-500/30 focus:ring-emerald-500'
+              }`}
+              placeholder="Nhập mật khẩu của bạn"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200 focus:outline-none"
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+            >
+              {showPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              )}
+            </button>
+          </div>
           {errors.password && (
             <p className="mt-1 text-sm text-red-400 flex items-center">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               {errors.password}
+            </p>
+          )}
+        </div>
+
+        {/* 2FA Code - Bắt buộc */}
+        <div>
+          <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-300 mb-2">
+            Mã xác thực 2FA (6 số) <span className="text-red-400">*</span>
+          </label>
+          <input
+            id="twoFactorCode"
+            name="twoFactorCode"
+            type="text"
+            maxLength={6}
+            value={formData.twoFactorCode}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+              errors.twoFactorCode 
+                ? 'border-red-500/50 focus:ring-red-500' 
+                : 'border-emerald-500/30 focus:ring-emerald-500'
+            }`}
+            placeholder="Nhập mã 6 chữ số từ Google Authenticator"
+          />
+          {errors.twoFactorCode && (
+            <p className="mt-1 text-sm text-red-400 flex items-center">
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.twoFactorCode}
             </p>
           )}
         </div>
@@ -240,4 +318,3 @@ function AdminLoginForm() {
 }
 
 export default AdminLoginForm;
-

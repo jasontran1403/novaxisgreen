@@ -244,7 +244,7 @@ function Dashboard() {
               NOVA Token Information
             </h3>
             <p className="text-2xl font-bold text-white">
-              1 NOVA = {novaPrice.toFixed(2).replace('.', ',')} USDT
+              1 NOVA = {novaPrice} USDT
             </p>
             <p className="text-sm text-gray-300 break-all">
               Smart Contract:{' '}

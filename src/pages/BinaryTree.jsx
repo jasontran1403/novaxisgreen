@@ -18,7 +18,7 @@ function BinaryTree() {
   }, [viewMode, hasLoadedTree, treeData, fetchTreeData]);
 
   // Handler để load full tree
-  const handleLoadFullTree = async (maxDepth = 50) => {
+  const handleLoadFullTree = async (maxDepth = 5) => {
     await fetchTreeData(maxDepth);
   };
 

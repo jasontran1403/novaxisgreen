@@ -16,7 +16,7 @@ export const BinaryTreeProvider = ({ children }) => {
   const [treeData, setTreeData] = useState(null);
   const [loading, setLoading] = useState(false); // ✅ false, không phải true
   const [error, setError] = useState('');
-  const [maxDepth, setMaxDepth] = useState(15);
+  const [maxDepth, setMaxDepth] = useState(5);
 
   // ✅ Fetch binary tree data - CHỈ gọi khi cần
   const fetchTreeData = async (customMaxDepth = null, userId = null) => {
@@ -27,7 +27,7 @@ export const BinaryTreeProvider = ({ children }) => {
       const depthToUse = customMaxDepth !== null ? customMaxDepth : maxDepth;
       
       // Build params
-      const params = { maxDepth: depthToUse };
+      const params = {};
       if (userId) {
         params.userId = userId;
       }

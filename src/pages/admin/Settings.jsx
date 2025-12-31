@@ -3,8 +3,7 @@ import { API_ENDPOINTS } from '../../config/apiConfig';
 import api from '../../services/api';
 
 function Settings() {
-  const [activeTab, setActiveTab] = useState('admins');
-  const [admins, setAdmins] = useState([]);
+  const [activeTab, setActiveTab] = useState('discord');
   const [exchangeRate, setExchangeRate] = useState({ novaToUsd: 0 });
   const [maintenance, setMaintenance] = useState({
     withdraw: { enabled: false, message: '' },
@@ -15,7 +14,6 @@ function Settings() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchAdmins();
     fetchExchangeRate();
     fetchMaintenance();
     fetchNotifications();
@@ -65,40 +63,6 @@ function Settings() {
     }
   };
 
-  const handleAddAdmin = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = {
-      username: formData.get('username'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-      name: formData.get('name')
-    };
-    try {
-      const res = await api.post(API_ENDPOINTS.ADMIN.SETTINGS_ADMIN_ADD, data);
-      if (res.success) {
-        alert('Admin added successfully');
-        e.target.reset();
-        fetchAdmins();
-      }
-    } catch (err) {
-      alert(err.message || 'Failed to add admin');
-    }
-  };
-
-  const handleRemoveAdmin = async (id) => {
-    if (!confirm('Remove this admin?')) return;
-    try {
-      const res = await api.delete(API_ENDPOINTS.ADMIN.SETTINGS_ADMIN_REMOVE(id));
-      if (res.success) {
-        alert('Admin removed successfully');
-        fetchAdmins();
-      }
-    } catch (err) {
-      alert(err.message || 'Failed to remove admin');
-    }
-  };
-
   const handleUpdateExchangeRate = async () => {
     try {
       const res = await api.post(API_ENDPOINTS.ADMIN.SETTINGS_EXCHANGE_RATE, exchangeRate);
@@ -144,7 +108,7 @@ function Settings() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4 border-b border-emerald-500/30 overflow-x-auto">
-          {['admins', 'discord', 'exchange', 'maintenance', 'notifications'].map((tab) => (
+          {['discord', 'exchange', 'maintenance', 'notifications'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -158,86 +122,6 @@ function Settings() {
             </button>
           ))}
         </div>
-
-        {/* Admin Management */}
-        {activeTab === 'admins' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-emerald-400">Admin Management</h3>
-            
-            {/* Add Admin Form */}
-            <form onSubmit={handleAddAdmin} className="bg-slate-700/50 rounded-lg p-4 border border-emerald-500/30">
-              <h4 className="text-emerald-400 mb-3">Add New Admin</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="Username"
-                  className="px-3 py-2 bg-slate-600 border border-emerald-500/30 rounded text-white text-sm"
-                />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  required
-                  className="px-3 py-2 bg-slate-600 border border-emerald-500/30 rounded text-white text-sm"
-                />
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Name"
-                  required
-                  className="px-3 py-2 bg-slate-600 border border-emerald-500/30 rounded text-white text-sm"
-                />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  required
-                  className="px-3 py-2 bg-slate-600 border border-emerald-500/30 rounded text-white text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                className="mt-3 px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded text-emerald-400 text-sm"
-              >
-                Add Admin
-              </button>
-            </form>
-
-            {/* Admin List */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-emerald-500/30 bg-slate-700/50">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">ID</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Username</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Email</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Name</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-emerald-400 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map((admin) => (
-                    <tr key={admin.id} className="border-b border-emerald-500/10">
-                      <td className="py-3 px-4 text-sm text-slate-300">{admin.id}</td>
-                      <td className="py-3 px-4 text-sm text-emerald-400">{admin.username}</td>
-                      <td className="py-3 px-4 text-sm text-slate-300">{admin.email}</td>
-                      <td className="py-3 px-4 text-sm text-slate-300">{admin.name}</td>
-                      <td className="py-3 px-4">
-                        <button
-                          onClick={() => handleRemoveAdmin(admin.id)}
-                          className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded text-red-400 text-xs"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
         {/* Discord Webhook */}
         {activeTab === 'discord' && (

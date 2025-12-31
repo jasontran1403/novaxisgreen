@@ -94,17 +94,17 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     try {
       console.log('[REFLINK] Starting copy:', { parentId, parentCode, position });
       setCopiedRef(`${nodeKey}-loading`);
-      
+
       const data = await createTempReflink(parentId, position);
       console.log('[REFLINK] API response:', data);
-      
+
       const baseUrl = window.location.origin;
       const refLink = `${baseUrl}/register?ref=${data.refCode}`;
-      
+
       await navigator.clipboard.writeText(refLink);
       setCopiedRef(nodeKey);
       setTimeout(() => setCopiedRef(null), 3000);
-      
+
       const msg = data.isDefault
         ? `Copied default ${position} reflink!`
         : `Copied temp reflink (${data.refCode})`;
@@ -208,133 +208,96 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
   }), [copiedRef]);
 
   const calculateTreeLayout = (root) => {
-    const nodes = [];
-    const edges = [];
-    let nodeId = 0;
+  const nodes = [];
+  const edges = [];
+  let nodeId = 0;
 
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const HORIZONTAL_SPACING = isMobile ? 120 : 180;
-    const VERTICAL_SPACING = isMobile ? 120 : 180;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const BASE_HORIZONTAL = isMobile ? 140 : 200; // Tăng spacing cơ bản
+  const VERTICAL_SPACING = isMobile ? 160 : 200;
 
-    // ✅ FIX: Đổi từ node.left/right sang node.leftChild/rightChild
-    const getSubtreeWidth = (node) => {
-      if (!node) return 1;
+  // Tính độ rộng subtree (số node lá)
+  const getSubtreeWidth = (node) => {
+    if (!node) return 1;
+    return getSubtreeWidth(node.leftChild) + getSubtreeWidth(node.rightChild);
+  };
+
+  const traverse = (node, parentId = null, position = null, parentInfo = null, level = 0, xCenter = 0) => {
+    if (!node && !parentId) return null;
+
+    const id = node ? `node-${nodeId++}` : `empty-${nodeId++}`;
+    const yPos = level * VERTICAL_SPACING;
+
+    let xPos;
+
+    if (node) {
       const leftWidth = getSubtreeWidth(node.leftChild);
       const rightWidth = getSubtreeWidth(node.rightChild);
-      return leftWidth + rightWidth;
-    };
+      const totalWidth = leftWidth + rightWidth;
 
-    const traverse = (node, parentId = null, position = null, parentInfo = null, level = 0, xOffset = 0) => {
-      if (!node && !parentId) return;
+      // Centering: node ở giữa subtree của nó
+      xPos = xCenter;
 
-      const id = node ? `node-${nodeId++}` : `empty-${nodeId++}`;
-      const yPos = level * VERTICAL_SPACING;
+      nodes.push({
+        id,
+        type: 'member',
+        position: { x: xPos, y: yPos },
+        data: {
+          userId: node.id,
+          memberCode: node.username,
+          name: node.fullName,
+          sponsorName: node.sponsorName,
+          isCurrentUser: node.isCurrentUser,
+        },
+      });
 
-      let xPos = xOffset;
+      // Tính offset cho con trái/phải
+      const spacing = BASE_HORIZONTAL * (1 + level * 0.25); // Spacing tăng dần theo level
+      const leftOffset = xPos - (leftWidth / 2 + rightWidth / 2) * spacing - spacing / 2;
+      const rightOffset = xPos + (leftWidth / 2 + rightWidth / 2) * spacing + spacing / 2;
 
-      if (node) {
-        // ✅ FIX: Đổi từ node.left/right sang node.leftChild/rightChild
-        const leftWidth = getSubtreeWidth(node.leftChild);
-        const rightWidth = getSubtreeWidth(node.rightChild);
+      const currentParentInfo = { id: node.id, username: node.username };
 
-        if (leftWidth + rightWidth > 0) {
-          xPos = xOffset;
-        } else {
-          xPos = xOffset;
-        }
-      } else {
-        if (position === 'left') {
-          xPos = xOffset - HORIZONTAL_SPACING;
-        } else if (position === 'right') {
-          xPos = xOffset + HORIZONTAL_SPACING;
-        }
-      }
+      traverse(node.leftChild, id, 'left', currentParentInfo, level + 1, leftOffset);
+      traverse(node.rightChild, id, 'right', currentParentInfo, level + 1, rightOffset);
+    } else {
+      // Empty node: offset theo position để tách biệt
+      const spacing = BASE_HORIZONTAL * (1 + level * 0.25);
+      xPos = position === 'left' 
+        ? xCenter - spacing 
+        : xCenter + spacing;
 
-      // Create node
-      if (node) {
-        nodes.push({
-          id,
-          type: 'member',
-          position: { x: xPos, y: yPos },
-          data: {
-            userId: node.id,
-            memberCode: node.username,      // ✅ API field: username
-            name: node.fullName,            // ✅ API field: fullName
-            sponsorName: node.sponsorName,
-            isCurrentUser: node.isCurrentUser,
-          },
-        });
-      } else {
-        nodes.push({
-          id,
-          type: 'empty',
-          position: { x: xPos, y: yPos },
-          data: {
-            parentId: parentInfo?.id || null,
-            parentCode: parentInfo?.username || '',  // ✅ Đổi từ memberCode → username
-            position: position || 'left',
-          },
-        });
-      }
-
-      if (parentId) {
-        edges.push({
-          id: `edge-${parentId}-${id}`,
-          source: parentId,
-          target: id,
-          type: 'straight',
-          style: { stroke: '#10b981', strokeWidth: 2 },
-          animated: false,
-        });
-      }
-
-      if (node) {
-        // ✅ FIX: Đổi từ node.left/right sang node.leftChild/rightChild
-        const leftWidth = getSubtreeWidth(node.leftChild);
-        const rightWidth = getSubtreeWidth(node.rightChild);
-
-        let leftXOffset = xPos;
-        let rightXOffset = xPos;
-
-        const leftSpan = leftWidth * HORIZONTAL_SPACING;
-        const rightSpan = rightWidth * HORIZONTAL_SPACING;
-
-        if (leftWidth > 0 && rightWidth > 0) {
-          const gap = HORIZONTAL_SPACING;
-          const totalHalfSpan = (leftSpan + rightSpan) / 2;
-          leftXOffset = xPos - totalHalfSpan - gap;
-          rightXOffset = xPos + totalHalfSpan + gap;
-        } else if (leftWidth > 0) {
-          leftXOffset = xPos - HORIZONTAL_SPACING;
-          rightXOffset = xPos + HORIZONTAL_SPACING;
-        } else if (rightWidth > 0) {
-          leftXOffset = xPos - HORIZONTAL_SPACING;
-          rightXOffset = xPos + HORIZONTAL_SPACING;
-        } else {
-          leftXOffset = xPos - HORIZONTAL_SPACING;
-          rightXOffset = xPos + HORIZONTAL_SPACING;
-        }
-
-        // ✅ Pass parent info WITH correct field name
-        const currentParentInfo = {
-          id: node.id,
-          username: node.username,  // ✅ Đổi từ memberCode → username
-        };
-
-        // ✅ FIX: Đổi từ node.left/right sang node.leftChild/rightChild
-        traverse(node.leftChild || null, id, 'left', currentParentInfo, level + 1, leftXOffset);
-        traverse(node.rightChild || null, id, 'right', currentParentInfo, level + 1, rightXOffset);
-      }
-
-      return id;
-    };
-
-    if (root) {
-      traverse(root, null, null, null, 0, 0);
+      nodes.push({
+        id,
+        type: 'empty',
+        position: { x: xPos, y: yPos },
+        data: {
+          parentId: parentInfo?.id || null,
+          parentCode: parentInfo?.username || '',
+          position: position || 'left',
+        },
+      });
     }
 
-    return { nodes, edges };
+    if (parentId) {
+      edges.push({
+        id: `edge-${parentId}-${id}`,
+        source: parentId,
+        target: id,
+        type: 'straight',
+        style: { stroke: '#10b981', strokeWidth: 2 },
+        animated: false,
+      });
+    }
+
+    return id;
   };
+
+  // Bắt đầu từ root, centering tại x = 0
+  traverse(root, null, null, null, 0, 0);
+
+  return { nodes, edges };
+};
 
   // ✅ FIX: DEBOUNCE - Set loading TRONG timeout, không phải trước
   useEffect(() => {
@@ -359,7 +322,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
         abortControllerRef.current = new AbortController();
 
         const res = await api.get(API_ENDPOINTS.USER.BINARY_TREE, {
-          params: { username: trimmed, maxDepth: 15 },
+          params: { username: trimmed },
           signal: abortControllerRef.current.signal
         });
 
@@ -490,7 +453,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
             >
               <Background color="#10b981" gap={16} opacity={0.1} />
               <Controls />
-              <MiniMap />
             </ReactFlow>
           </div>
         )}

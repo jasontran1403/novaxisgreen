@@ -29,7 +29,7 @@ export const API_ENDPOINTS = {
     PASSWORD_STATUS: '/api/user/password-status',
     STATISTIC: '/api/user/statistic',
     MY_REFLINKS: '/api/user/my-reflinks',
-    BINARY_TREE: '/api/user/binary-tree',       // ← FIX: Đúng endpoint
+    BINARY_TREE: '/api/user/binary-tree',
     MEMBER_LIST: '/api/user/member-list',
     F1_MEMBERS: '/api/user/f1-members',
     F1_MEMBERS_BY_ID: (userId) => `/api/user/f1-members/${userId}`,
