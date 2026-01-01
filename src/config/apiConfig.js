@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
 
   // User
   USER: {
+    NOVA_PRICE: '/api/user/nova-price',
     CHANGE_PASSWORD: '/api/user/change-password',
     PASSWORD_STATUS: '/api/user/password-status',
     STATISTIC: '/api/user/statistic',

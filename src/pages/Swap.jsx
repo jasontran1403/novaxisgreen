@@ -18,6 +18,11 @@ function Swap() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [direction, setDirection] = useState('NOVA_TO_USDT'); // NOVA_TO_USDT or USDT_TO_NOVA
+
+  // ✅ NEW: State for NOVA price
+  const [novaPrice, setNovaPrice] = useState(0); // Default fallback
+  const [priceLoading, setPriceLoading] = useState(true);
+
   const [modal, setModal] = useState({
     open: false,
     title: '',
@@ -25,10 +30,39 @@ function Swap() {
     type: 'info'
   });
 
-  // Dynamic swap rate based on direction
+  // ✅ NEW: Fetch NOVA price from API
+  const fetchNovaPrice = useCallback(async () => {
+    try {
+      setPriceLoading(true);
+      console.log('[Swap] Fetching NOVA price...');
+
+      const response = await ApiService.get(API_ENDPOINTS.USER.NOVA_PRICE);
+
+      // response giờ là object { success: true, price: "0.1010" }
+      if (!response || !response.success || !response.price) {
+        throw new Error('Invalid response format from server');
+      }
+
+      const price = parseFloat(response.price);
+      if (!isNaN(price) && price > 0) {
+        console.log('[Swap] NOVA price fetched:', price);
+        setNovaPrice(price);
+      } else {
+        throw new Error('Invalid or zero NOVA price');
+      }
+    } catch (err) {
+      console.error('[Swap] Error fetching NOVA price:', err);
+      setNovaPrice(0);
+      toast.error('Không thể lấy giá NOVA. Swap tạm thời không khả dụng.');
+    } finally {
+      setPriceLoading(false);
+    }
+  }, []);
+
+  // ✅ Dynamic swap rate based on direction and fetched price
   const swapRate = useMemo(() => {
-    return direction === 'NOVA_TO_USDT' ? 0.1 : 10.0;
-  }, [direction]);
+    return direction === 'NOVA_TO_USDT' ? novaPrice : (1.0 / novaPrice);
+  }, [direction, novaPrice]);
 
   // Get from/to currencies based on direction
   const fromCurrency = useMemo(() => {
@@ -104,16 +138,18 @@ function Swap() {
     setModal({ open: true, type, title, message });
   };
 
+  // ✅ Fetch NOVA price on mount
   useEffect(() => {
+    fetchNovaPrice();
     fetchBalances();
     fetchSwapHistory(currentPage);
-  }, [fetchBalances, fetchSwapHistory, currentPage]);
+  }, [fetchNovaPrice, fetchBalances, fetchSwapHistory, currentPage]);
 
   const handleSwapAmountChange = (e) => {
     const value = e.target.value;
     setSwapAmount(value);
     if (value && !isNaN(value) && parseFloat(value) > 0) {
-      const calculated = (parseFloat(value) * swapRate).toFixed(direction === 'NOVA_TO_USDT' ? 2 : 0);
+      const calculated = (parseFloat(value) * swapRate).toFixed(direction === 'NOVA_TO_USDT' ? 4 : 2);
       setReceiveAmount(calculated);
     } else {
       setReceiveAmount('');
@@ -122,7 +158,7 @@ function Swap() {
 
   const handleMaxClick = () => {
     setSwapAmount(maxBalance.toString());
-    const calculated = (maxBalance * swapRate).toFixed(direction === 'NOVA_TO_USDT' ? 2 : 0);
+    const calculated = (maxBalance * swapRate).toFixed(direction === 'NOVA_TO_USDT' ? 4 : 2);
     setReceiveAmount(calculated);
   };
 
@@ -278,7 +314,14 @@ function Swap() {
                   Exchange Rate
                 </span>
                 <span className="text-lg font-semibold text-emerald-400 dark:text-emerald-300">
-                  {direction === 'NOVA_TO_USDT' ? '1 NOVA = 0.1 USDT' : '1 USDT = 10 NOVA'}
+                  {/* ✅ Dynamic rate display */}
+                  {priceLoading ? (
+                    'Loading...'
+                  ) : direction === 'NOVA_TO_USDT' ? (
+                    `1 NOVA = ${novaPrice.toFixed(4)} USDT`
+                  ) : (
+                    `1 USDT = ${(1 / novaPrice).toFixed(2)} NOVA`
+                  )}
                 </span>
               </div>
             </div>
@@ -353,8 +396,18 @@ function Swap() {
             {/* Swap Button */}
             <button
               onClick={handleSwap}
-              disabled={!swapAmount || parseFloat(swapAmount) <= 0 || parseFloat(swapAmount) > maxBalance}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${swapAmount && parseFloat(swapAmount) > 0 && parseFloat(swapAmount) <= maxBalance
+              disabled={
+                !swapAmount ||
+                parseFloat(swapAmount) <= 0 ||
+                parseFloat(swapAmount) > maxBalance ||
+                priceLoading ||
+                novaPrice <= 0  // ← thêm điều kiện này để an toàn
+              }
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${swapAmount &&
+                  parseFloat(swapAmount) > 0 &&
+                  parseFloat(swapAmount) <= maxBalance &&
+                  !priceLoading &&
+                  novaPrice > 0
                   ? 'bg-emerald-500 hover:bg-emerald-400 text-white dark:bg-emerald-400 dark:hover:bg-emerald-300 dark:text-gray-900'
                   : 'bg-slate-600/50 text-emerald-300/50 dark:bg-gray-700/50 dark:text-emerald-400/50 cursor-not-allowed'
                 }`}
@@ -372,8 +425,13 @@ function Swap() {
                   d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                 />
               </svg>
-              Swap Now
+              {priceLoading
+                ? 'Loading...'
+                : novaPrice <= 0
+                  ? 'NOVA price error'
+                  : 'Swap Now'}
             </button>
+
           </div>
         </div>
 
@@ -445,7 +503,6 @@ function Swap() {
                           }
                           const date = new Date(timestamp);
 
-                          // Optional: double-check if date is valid
                           if (isNaN(date.getTime())) {
                             return <span className="text-red-400">Invalid Date</span>;
                           }
@@ -524,8 +581,8 @@ function Swap() {
             <div className="flex items-center gap-3 mb-3">
               <div
                 className={`p-2 rounded-full ${modal.type === 'success'
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-red-500/20 text-red-300'
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-red-500/20 text-red-300'
                   }`}
               >
                 <svg
