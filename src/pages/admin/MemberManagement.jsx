@@ -625,125 +625,199 @@ function LockStatusModal({ member, onClose, onSave }) {
 // Update Member Modal Component
 function UpdateMemberModal({ member, onClose, onSave }) {
   const [updateData, setUpdateData] = useState({
-    name: member?.name || '',
     email: member?.email || '',
+    userRank: member?.userRank || 0,
+    userLeaderRank: member?.userLeaderRank || 0,
     password: '',
-    disable2FA: false,
-    capVip: member?.capVip || ''
+    passwordChanged: member?.passwordChanged || false
   });
-  const [vipLevels, setVipLevels] = useState([]);
-  const [loadingVipLevels, setLoadingVipLevels] = useState(true);
 
-  useEffect(() => {
-    const fetchVipLevels = async () => {
-      try {
-        const res = await api.get(API_ENDPOINTS.ADMIN.COMMISSION_VIP);
-        if (res.success && res.data) {
-          const levels = Array.isArray(res.data) ? res.data : [];
-          const formattedLevels = levels.map(vip => ({
-            id: vip.id,
-            name: vip.tenCap || `VIP ${vip.id}`
-          }));
-          setVipLevels(formattedLevels);
-        }
-      } catch (err) {
-        console.error('Failed to load VIP levels:', err);
-        setVipLevels([
-          { id: 1, name: 'Bronze' },
-          { id: 2, name: 'Silver' },
-          { id: 3, name: 'Gold' },
-          { id: 4, name: 'Platinum' },
-          { id: 5, name: 'Emerald' },
-          { id: 6, name: 'Sapphire' },
-          { id: 7, name: 'Ruby' },
-          { id: 8, name: 'Diamond' },
-          { id: 9, name: 'Crown Diamond' }
-        ]);
-      } finally {
-        setLoadingVipLevels(false);
-      }
-    };
-    fetchVipLevels();
-  }, []);
+  // Rank options (Bronze, Silver, Gold, ...)
+  const rankOptions = [
+    { value: 0, label: 'NO RANK' },
+    { value: 1, label: 'BRONZE' },
+    { value: 2, label: 'SILVER' },
+    { value: 3, label: 'GOLD' },
+    { value: 4, label: 'PLATINUM' },
+    { value: 5, label: 'EMERALD' },
+    { value: 6, label: 'SAPPHIRE' },
+    { value: 7, label: 'RUBY' },
+    { value: 8, label: 'DIAMOND' },
+    { value: 9, label: 'CROWN DIAMOND' }
+  ];
+
+  // Leader rank options (Level 0, Level 1, ...)
+  const leaderRankOptions = Array.from({ length: 10 }, (_, i) => ({
+    value: i,
+    label: `Level ${i}`
+  }));
+
+  const handleSave = () => {
+    // Validation
+    if (!updateData.email.trim()) {
+      alert('Email is required');
+      return;
+    }
+    if (updateData.password && updateData.password.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+
+    // Prepare data (remove password if empty)
+    const data = { ...updateData };
+    if (!data.password) {
+      delete data.password;
+    }
+
+    onSave(data);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 border border-emerald-500/50 rounded-lg p-6 max-w-md w-full">
+      <div className="bg-slate-800 border border-emerald-500/50 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-semibold text-emerald-400 mb-4">Update Member</h3>
-        <div className="space-y-3">
+        
+        <div className="space-y-4">
+          {/* Email */}
           <div>
-            <label className="block text-sm text-slate-300 mb-1">Name</label>
-            <input
-              type="text"
-              value={updateData.name}
-              onChange={(e) => setUpdateData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-slate-300 mb-1">Email</label>
+            <label className="block text-sm text-slate-300 mb-1">
+              Email <span className="text-red-400">*</span>
+            </label>
             <input
               type="email"
               value={updateData.email}
               onChange={(e) => setUpdateData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white"
+              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white focus:outline-none focus:border-emerald-500"
+              placeholder="Enter email"
             />
           </div>
+
+          {/* User Rank (Bronze, Silver, Gold, ...) */}
           <div>
-            <label className="block text-sm text-slate-300 mb-1">New Password (leave empty to keep current)</label>
+            <label className="block text-sm text-slate-300 mb-1">
+              User Rank (VIP Level)
+            </label>
+            <select
+              value={updateData.userRank}
+              onChange={(e) => setUpdateData(prev => ({ ...prev, userRank: Number(e.target.value) }))}
+              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white focus:outline-none focus:border-emerald-500"
+            >
+              {rankOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-400 mt-1">
+              Current: {rankOptions.find(r => r.value === member?.userRank)?.label || 'NO RANK'}
+            </p>
+          </div>
+
+          {/* User Leader Rank (Level 0, Level 1, ...) */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">
+              Leader Rank
+            </label>
+            <select
+              value={updateData.userLeaderRank}
+              onChange={(e) => setUpdateData(prev => ({ ...prev, userLeaderRank: Number(e.target.value) }))}
+              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white focus:outline-none focus:border-emerald-500"
+            >
+              {leaderRankOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-400 mt-1">
+              Current: Level {member?.userLeaderRank || 0}
+            </p>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">
+              New Password (leave empty to keep current)
+            </label>
             <input
               type="password"
               value={updateData.password}
               onChange={(e) => setUpdateData(prev => ({ ...prev, password: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white"
+              className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white focus:outline-none focus:border-emerald-500"
+              placeholder="Enter new password (min 6 characters)"
             />
-          </div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={updateData.disable2FA}
-              onChange={(e) => setUpdateData(prev => ({ ...prev, disable2FA: e.target.checked }))}
-              className="w-5 h-5"
-            />
-            <span className="text-sm text-slate-300">Disable 2FA</span>
-          </label>
-          <div>
-            <label className="block text-sm text-slate-300 mb-1">VIP Level (Rank)</label>
-            {loadingVipLevels ? (
-              <div className="text-xs text-slate-400">Loading VIP levels...</div>
-            ) : (
-              <select
-                value={updateData.capVip || ''}
-                onChange={(e) => setUpdateData(prev => ({ ...prev, capVip: e.target.value === '' ? null : Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white"
-              >
-                <option value="">Member (No VIP)</option>
-                {vipLevels.map((vip) => (
-                  <option key={vip.id} value={vip.id}>
-                    {vip.name}
-                  </option>
-                ))}
-              </select>
+            {updateData.password && updateData.password.length < 6 && (
+              <p className="text-xs text-red-400 mt-1">
+                Password must be at least 6 characters
+              </p>
             )}
-            <p className="text-xs text-slate-400 mt-1">Current: {member.vipLevelName || 'Member'}</p>
+          </div>
+
+          {/* Password Changed Status */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-2">
+              Password Changed Status
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="passwordChanged"
+                  checked={updateData.passwordChanged === false}
+                  onChange={() => setUpdateData(prev => ({ ...prev, passwordChanged: false }))}
+                  className="w-4 h-4 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-sm text-slate-300">
+                  Not Changed (User must change password on next login)
+                </span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="passwordChanged"
+                  checked={updateData.passwordChanged === true}
+                  onChange={() => setUpdateData(prev => ({ ...prev, passwordChanged: true }))}
+                  className="w-4 h-4 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-sm text-slate-300">
+                  Changed (User can login normally)
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Current: {member?.passwordChanged ? 'Changed ✓' : 'Not Changed ✗'}
+            </p>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="text-xs text-blue-300">
+                <p className="font-medium mb-1">Update Notes:</p>
+                <ul className="list-disc list-inside space-y-1 text-blue-200/80">
+                  <li>Password will be hashed automatically if provided</li>
+                  <li>Leave password empty to keep current password</li>
+                  <li>If "Not Changed" is selected, user must change password on next login</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Action Buttons */}
         <div className="flex gap-2 mt-6">
           <button
-            onClick={() => {
-              const data = { ...updateData };
-              if (!data.password) delete data.password;
-              if (!data.disable2FA) delete data.disable2FA;
-              if (data.capVip === '') data.capVip = null;
-              onSave(data);
-            }}
-            className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded text-emerald-400 text-sm"
+            onClick={handleSave}
+            className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded text-emerald-400 text-sm transition-colors"
           >
-            Save
+            💾 Save Changes
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm"
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 text-sm transition-colors"
           >
             Cancel
           </button>

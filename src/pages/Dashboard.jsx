@@ -188,55 +188,8 @@ function Dashboard() {
 
   return (
     <>
-      {/* ❌ REMOVED: ChangePasswordModal - now in Layout (global) */}
-
-      {/* Carousel Section - Full width on desktop */}
-      <div className="hidden md:block w-full">
-        <BannerCarousel images={bannerImages} />
-      </div>
-
       {/* Container chính */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-        {/* Carousel Section - Mobile only */}
-        <div className="md:hidden">
-          <BannerCarousel images={bannerImages} />
-        </div>
-
-        {/* Quick Actions Grid - Mobile only */}
-        <div className="md:hidden">
-          <QuickActions actions={quickActions} />
-        </div>
-
-        {/* Action Card - Mời bạn bè */}
-        <InviteFriendsCard onClick={() => setShowReflinks(!showReflinks)} />
-
-        {/* Reflink Section */}
-        {showReflinks && (
-          <ReflinkSection
-            leftRefLink={leftRefLink}
-            rightRefLink={rightRefLink}
-          />
-        )}
-
-        {/* Plan Card */}
-        <PlanCard
-          plan={planData}
-          loading={loading}
-          onRefresh={fetchStatistics}
-        />
-
-        {/* Balance Section */}
-        <BalanceSection
-          balance={balanceData}
-          loading={loading}
-        />
-
-        {/* Commission Statistics */}
-        <CommissionStats
-          commissions={commissionData}
-          currency={balanceData.currency}
-        />
-
         {/* NOVA Token Information */}
         <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-4 md:p-6 glow-border flex flex-col md:flex-row items-center gap-4">
           <div className="flex-1 space-y-2">
@@ -276,6 +229,53 @@ function Dashboard() {
               className="w-full h-auto rounded-lg shadow-lg border border-emerald-500/40"
             />
           </div>
+        </div>
+
+
+
+        {/* Quick Actions Grid - Mobile only */}
+        <div className="md:hidden">
+          <QuickActions actions={quickActions} />
+        </div>
+
+        {/* Action Card - Mời bạn bè */}
+        <InviteFriendsCard onClick={() => setShowReflinks(!showReflinks)} />
+
+        {/* Reflink Section */}
+        {showReflinks && (
+          <ReflinkSection
+            leftRefLink={leftRefLink}
+            rightRefLink={rightRefLink}
+          />
+        )}
+
+        {/* Plan Card */}
+        <PlanCard
+          plan={planData}
+          loading={loading}
+          onRefresh={fetchStatistics}
+        />
+
+        {/* Balance Section */}
+        <BalanceSection
+          balance={balanceData}
+          loading={loading}
+        />
+
+        {/* Commission Statistics */}
+        <CommissionStats
+          commissions={commissionData}
+          currency={balanceData.currency}
+        />
+
+        {/* Carousel Section - Full width on desktop */}
+        <div className="hidden md:block w-full">
+          <BannerCarousel images={bannerImages} />
+        </div>
+
+        {/* Carousel Section - Mobile only */}
+        <div className="md:hidden">
+          <BannerCarousel images={bannerImages} />
         </div>
       </div>
     </>
