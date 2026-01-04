@@ -63,7 +63,10 @@ function RegisterForm() {
       setRefCodeValidation(prev => ({ ...prev, isValidating: true }));
 
       try {
-        const response = await api.get(`${API_ENDPOINTS.REFLINK.VALIDATE}/${refCode}`, { includeAuth: false });
+        const response = await api.get(`${API_ENDPOINTS.REFLINK.VALIDATE}`, {
+          params: { refCode },  // Axios tự động encode
+          includeAuth: false
+        });
 
         if (response.success && response.data) {
           const isValid = response.data.valid && response.data.available;
