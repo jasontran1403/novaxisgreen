@@ -15,6 +15,41 @@ function WithdrawManagement() {
   const [limit] = useState(20);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
 
+  // Thêm hàm helper này ở đầu component
+  const getFormattedDate = (withdraw) => {
+    const timestamp = Number(withdraw.transactionTime || withdraw.createdAt);
+
+    if (isNaN(timestamp) || timestamp <= 0) {
+      return '--';
+    }
+
+    const date = new Date(timestamp);
+
+    if (isNaN(date.getTime())) {
+      return '--';
+    }
+
+    // Format giống desktop cho nhất quán
+    return (
+      <div className="text-right">
+        <div>
+          {date.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          })}
+        </div>
+        <div className="text-slate-500">
+          {date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          })}
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     fetchWithdraws();
   }, [page, statusFilter]);
@@ -213,8 +248,8 @@ function WithdrawManagement() {
                       </td>
                       <td className="py-3 px-4 text-xs">
                         <span className={`px-2 py-1 rounded ${(withdraw.transactionStatus || '').toLowerCase() === 'success' ? 'bg-green-500/20 text-green-400' :
-                              (withdraw.transactionStatus || '').toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
+                          (withdraw.transactionStatus || '').toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
                           }`}>
                           {withdraw.transactionStatus || 'Pending'}
                         </span>
@@ -272,21 +307,17 @@ function WithdrawManagement() {
                       </div>
                     </div>
                     <span className={`px-2 py-1 rounded text-xs whitespace-nowrap ml-2 ${(withdraw.transactionStatus || '').toLowerCase() === 'completed' ? 'bg-green-500/20 text-green-400' :
-                        (withdraw.transactionStatus || '').toLowerCase() === 'approved' ? 'bg-blue-500/20 text-blue-400' :
-                          (withdraw.transactionStatus || '').toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
+                      (withdraw.transactionStatus || '').toLowerCase() === 'approved' ? 'bg-blue-500/20 text-blue-400' :
+                        (withdraw.transactionStatus || '').toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
                       }`}>
                       {withdraw.transactionStatus || 'Pending'}
                     </span>
                   </div>
                   <div className="text-xs text-slate-300 space-y-1">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start">
                       <span className="text-slate-400">Date:</span>
-                      <span>
-                        {withdraw.transactionTime
-                          ? new Date(withdraw.transactionTime).toLocaleString()
-                          : '--'}
-                      </span>
+                      {getFormattedDate(withdraw)}
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Amount:</span>
