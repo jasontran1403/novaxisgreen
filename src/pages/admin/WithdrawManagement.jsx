@@ -306,7 +306,7 @@ function WithdrawManagement() {
                         {withdraw.username || 'N/A'}
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs whitespace-nowrap ml-2 ${(withdraw.transactionStatus || '').toLowerCase() === 'Success' ? 'bg-green-500/20 text-green-400' :
+                    <span className={`px-2 py-1 rounded text-xs whitespace-nowrap ml-2 ${(withdraw.transactionStatus || '').toLowerCase() === 'success' ? 'bg-green-500/20 text-green-400' :
                       (withdraw.transactionStatus || '').toLowerCase() === 'approved' ? 'bg-blue-500/20 text-blue-400' :
                         (withdraw.transactionStatus || '').toLowerCase() === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
                           'bg-red-500/20 text-red-400'
