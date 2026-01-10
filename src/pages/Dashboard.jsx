@@ -6,6 +6,7 @@ import InviteFriendsCard from '../components/InviteFriendsCard';
 import PlanCard from '../components/PlanCard';
 import QuickActions from '../components/QuickActions';
 import ReflinkSection from '../components/ReflinkSection';
+import Promotion from "../assets/promotion.jpg";
 // ❌ REMOVED: ChangePasswordModal import - now in Layout
 import { API_ENDPOINTS } from '../config/apiConfig';
 import { useAuth } from '../contexts/AuthContext';
@@ -276,6 +277,17 @@ function Dashboard() {
         {/* Carousel Section - Mobile only */}
         <div className="md:hidden">
           <BannerCarousel images={bannerImages} />
+        </div>
+
+        <div className="relative bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 overflow-hidden glow-border">
+          <img
+            src={Promotion}
+            alt="Promotion Banner"
+            className="w-full h-auto max-h-[500px] object-contain mx-auto"
+          />
+
+          <div className="absolute inset-0 flex items-center justify-center p-6">
+          </div>
         </div>
       </div>
     </>
