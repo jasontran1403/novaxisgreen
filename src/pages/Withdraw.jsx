@@ -76,6 +76,7 @@ function Withdraw() {
       if (res?.pagination) {
         setPagination(res.pagination);
       }
+      console.log(res);
     } catch (err) {
       console.error('Failed to load withdraw history:', err);
       toast.error('Unable to load withdrawal history');
@@ -225,7 +226,7 @@ function Withdraw() {
       open: true,
       id: item.id,
       amount: item.amount,
-      token: item.currency || token,
+      token: item.token || token,
     });
   };
 
@@ -475,8 +476,8 @@ function Withdraw() {
                           })()}
                         </td>
                         <td className="py-3 px-4 text-xs">
-                          <div className="text-emerald-300/80 dark:text-emerald-400/80 text-xs">{formatCurrency(item.amount, item.currency || token)}</div>
-                          <div className="text-yellow-400 italic text-xs">Fee {formatCurrency(item.fee || calculateFee(), item.currency || token)}</div>
+                          <div className="text-emerald-300/80 dark:text-emerald-400/80 text-xs">{formatCurrency(item.amount, item.token || token)}</div>
+                          <div className="text-yellow-400 italic text-xs">Fee {formatCurrency(item.fee || calculateFee(), item.token || token)}</div>
                         </td>
                         <td className="py-3 px-4 text-xs font-mono">
                           <button

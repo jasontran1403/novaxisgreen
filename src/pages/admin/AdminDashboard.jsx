@@ -23,6 +23,7 @@ function AdminDashboard() {
         setError(res.error || 'Failed to load dashboard stats');
       }
     } catch (err) {
+      localStorage.clear();
       setError(err.message || 'Failed to load dashboard stats');
     } finally {
       setLoading(false);
