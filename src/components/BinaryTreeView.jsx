@@ -3,18 +3,18 @@ import ReactFlow, {
   Background,
   Controls,
   Handle,
-  MiniMap,
   Position,
   ReactFlowProvider,
   useEdgesState,
-  useNodesState
+  useNodesState,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { API_ENDPOINTS } from '../config/apiConfig';
 import api from '../services/api';
 import { createTempReflink } from '../services/reflinkService';
 
-// Toast Component
+// Toast Component (giữ nguyên)
 const Toast = ({ message, type = 'success', isVisible, onClose }) => {
   useEffect(() => {
     if (isVisible) {
@@ -52,7 +52,6 @@ const Toast = ({ message, type = 'success', isVisible, onClose }) => {
   );
 };
 
-// Inner component
 function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree = null }) {
   const [copiedRef, setCopiedRef] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,16 +63,14 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
   const searchTimeoutRef = useRef(null);
   const abortControllerRef = useRef(null);
 
+  const { setViewport, fitView } = useReactFlow();
+
   // Hide watermark
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `.react-flow__attribution { display: none !important; }`;
     document.head.appendChild(style);
-    return () => {
-      if (document.head.contains(style)) {
-        document.head.removeChild(style);
-      }
-    };
+    return () => document.head.removeChild(style);
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -84,7 +81,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
 
   const copyRefLink = async (parentId, parentCode, position) => {
     if (!parentId || !parentCode) {
-      console.warn('[REFLINK] Missing data:', { parentId, parentCode, position });
       showToast('Cannot create link: missing info', 'error');
       return;
     }
@@ -92,12 +88,8 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     const nodeKey = `${parentCode}-${position}`;
 
     try {
-      console.log('[REFLINK] Starting copy:', { parentId, parentCode, position });
       setCopiedRef(`${nodeKey}-loading`);
-
       const data = await createTempReflink(parentId, position);
-      console.log('[REFLINK] API response:', data);
-
       const baseUrl = window.location.origin;
       const refLink = `${baseUrl}/register?ref=${data.refCode}`;
 
@@ -109,9 +101,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
         ? `Copied default ${position} reflink!`
         : `Copied temp reflink (${data.refCode})`;
       showToast(msg, 'success');
-      console.log('[REFLINK] Created and copied:', refLink);
     } catch (err) {
-      console.error('[REFLINK] Failed to copy:', err);
       showToast(err.message || 'Failed to create referral link', 'error');
       setCopiedRef(null);
     }
@@ -184,7 +174,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
           <Handle type="target" position={Position.Top} className="w-1 h-1 bg-emerald-500/50" />
           <div className="flex flex-col items-center justify-center h-full">
             {isLoading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-400"></div>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-400 mx-auto"></div>
             ) : isCopied ? (
               <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -208,98 +198,84 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
   }), [copiedRef]);
 
   const calculateTreeLayout = (root) => {
-  const nodes = [];
-  const edges = [];
-  let nodeId = 0;
+    const nodes = [];
+    const edges = [];
+    let nodeId = 0;
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const BASE_HORIZONTAL = isMobile ? 140 : 200; // Tăng spacing cơ bản
-  const VERTICAL_SPACING = isMobile ? 160 : 200;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const VERTICAL_SPACING = isMobile ? 120 : 160;
+    
+    // Khoảng cách ngang giữa parent và child ở mỗi level (giảm dần theo level)
+    const getHorizontalSpacing = (level) => {
+      const baseSpacing = isMobile ? 320 : 400; // Tăng thêm để tránh chồng khi cây đầy đủ
+      // Giảm 20% mỗi level để các node dưới vẫn cách xa
+      return baseSpacing * Math.pow(0.8, level);
+    };
 
-  // Tính độ rộng subtree (số node lá)
-  const getSubtreeWidth = (node) => {
-    if (!node) return 1;
-    return getSubtreeWidth(node.leftChild) + getSubtreeWidth(node.rightChild);
+    const traverse = (node, parentId = null, position = null, parentInfo = null, level = 0, parentX = 0) => {
+      if (!node && !parentId) return null;
+
+      const id = node ? `node-${nodeId++}` : `empty-${nodeId++}`;
+      const yPos = level * VERTICAL_SPACING;
+
+      // Tính vị trí X: parent ở giữa, con trái/phải cách đều nhau
+      let xPos = parentX;
+      if (level > 0) {
+        const spacing = getHorizontalSpacing(level - 1);
+        xPos = position === 'left' ? parentX - spacing : parentX + spacing;
+      }
+
+      if (node) {
+        nodes.push({
+          id,
+          type: 'member',
+          position: { x: xPos, y: yPos },
+          data: {
+            userId: node.id,
+            memberCode: node.username,
+            name: node.fullName,
+            sponsorName: node.sponsorName,
+            isCurrentUser: node.isCurrentUser,
+          },
+        });
+
+        const currentParentInfo = { id: node.id, username: node.username };
+
+        // Đệ quy vẽ cây con trái và phải với spacing đều nhau
+        traverse(node.leftChild, id, 'left', currentParentInfo, level + 1, xPos);
+        traverse(node.rightChild, id, 'right', currentParentInfo, level + 1, xPos);
+      } else {
+        nodes.push({
+          id,
+          type: 'empty',
+          position: { x: xPos, y: yPos },
+          data: {
+            parentId: parentInfo?.id || null,
+            parentCode: parentInfo?.username || '',
+            position: position || 'left',
+          },
+        });
+      }
+
+      if (parentId) {
+        edges.push({
+          id: `edge-${parentId}-${id}`,
+          source: parentId,
+          target: id,
+          type: 'smoothstep',
+          style: { stroke: '#10b981', strokeWidth: 2 },
+          animated: false,
+        });
+      }
+
+      return id;
+    };
+
+    traverse(root, null, null, null, 0, 0);
+
+    return { nodes, edges };
   };
 
-  const traverse = (node, parentId = null, position = null, parentInfo = null, level = 0, xCenter = 0) => {
-    if (!node && !parentId) return null;
-
-    const id = node ? `node-${nodeId++}` : `empty-${nodeId++}`;
-    const yPos = level * VERTICAL_SPACING;
-
-    let xPos;
-
-    if (node) {
-      const leftWidth = getSubtreeWidth(node.leftChild);
-      const rightWidth = getSubtreeWidth(node.rightChild);
-      const totalWidth = leftWidth + rightWidth;
-
-      // Centering: node ở giữa subtree của nó
-      xPos = xCenter;
-
-      nodes.push({
-        id,
-        type: 'member',
-        position: { x: xPos, y: yPos },
-        data: {
-          userId: node.id,
-          memberCode: node.username,
-          name: node.fullName,
-          sponsorName: node.sponsorName,
-          isCurrentUser: node.isCurrentUser,
-        },
-      });
-
-      // Tính offset cho con trái/phải
-      const spacing = BASE_HORIZONTAL * (1 + level * 0.25); // Spacing tăng dần theo level
-      const leftOffset = xPos - (leftWidth / 2 + rightWidth / 2) * spacing - spacing / 2;
-      const rightOffset = xPos + (leftWidth / 2 + rightWidth / 2) * spacing + spacing / 2;
-
-      const currentParentInfo = { id: node.id, username: node.username };
-
-      traverse(node.leftChild, id, 'left', currentParentInfo, level + 1, leftOffset);
-      traverse(node.rightChild, id, 'right', currentParentInfo, level + 1, rightOffset);
-    } else {
-      // Empty node: offset theo position để tách biệt
-      const spacing = BASE_HORIZONTAL * (1 + level * 0.25);
-      xPos = position === 'left' 
-        ? xCenter - spacing 
-        : xCenter + spacing;
-
-      nodes.push({
-        id,
-        type: 'empty',
-        position: { x: xPos, y: yPos },
-        data: {
-          parentId: parentInfo?.id || null,
-          parentCode: parentInfo?.username || '',
-          position: position || 'left',
-        },
-      });
-    }
-
-    if (parentId) {
-      edges.push({
-        id: `edge-${parentId}-${id}`,
-        source: parentId,
-        target: id,
-        type: 'straight',
-        style: { stroke: '#10b981', strokeWidth: 2 },
-        animated: false,
-      });
-    }
-
-    return id;
-  };
-
-  // Bắt đầu từ root, centering tại x = 0
-  traverse(root, null, null, null, 0, 0);
-
-  return { nodes, edges };
-};
-
-  // ✅ FIX: DEBOUNCE - Set loading TRONG timeout, không phải trước
   useEffect(() => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -313,7 +289,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
       return;
     }
 
-    // ✅ KHÔNG set loading ngay - chỉ set TRONG timeout
     searchTimeoutRef.current = setTimeout(async () => {
       setSearchLoading(true);
       setSearchError('');
@@ -365,13 +340,27 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     setNodes(initialNodesAndEdges.nodes);
     setEdges(initialNodesAndEdges.edges);
     if (reactFlowInstance.current) {
-      setTimeout(() => reactFlowInstance.current.fitView({ padding: 0.2, duration: 300 }), 100);
+      setTimeout(() => {
+        reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 });
+        // Zoom thêm 10%
+        setTimeout(() => {
+          const currentZoom = reactFlowInstance.current.getZoom();
+          reactFlowInstance.current.zoomTo(currentZoom * 1.1, { duration: 200 });
+        }, 350);
+      }, 100);
     }
   }, [initialNodesAndEdges, setNodes, setEdges]);
 
   const onInit = useCallback((instance) => {
     reactFlowInstance.current = instance;
-    setTimeout(() => instance.fitView({ padding: 0.2, duration: 300 }), 100);
+    setTimeout(() => {
+      instance.fitView({ padding: 0.1, duration: 300 });
+      // Zoom thêm 10%
+      setTimeout(() => {
+        const currentZoom = instance.getZoom();
+        instance.zoomTo(currentZoom * 1.1, { duration: 200 });
+      }, 350);
+    }, 100);
   }, []);
 
   return (
@@ -379,7 +368,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
       <Toast {...toast} onClose={hideToast} />
 
       <div className="bg-slate-700/50 rounded-lg border border-emerald-500/50 p-4 md:p-6">
-        {/* ✅ HEADER - LUÔN HIỂN THỊ */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h2 className="text-xl font-semibold text-emerald-400">Binary Tree</h2>
 
@@ -407,7 +396,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
           </div>
         </div>
 
-        {/* ✅ TREE AREA - Thay đổi theo state */}
+        {/* Tree Area */}
         {searchLoading && (
           <div className="h-[500px] md:h-[700px] flex items-center justify-center">
             <div className="text-center">
@@ -443,16 +432,19 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
               onEdgesChange={onEdgesChange}
               onInit={onInit}
               fitView
-              minZoom={0.1}
-              maxZoom={3}
-              panOnScroll
-              zoomOnScroll
-              zoomOnPinch
-              defaultEdgeOptions={{ type: 'straight', style: { stroke: '#10b981', strokeWidth: 2 } }}
+              minZoom={0.4}
+              maxZoom={1}
+              zoomOnScroll={true}
+              zoomOnPinch={true}
+              panOnScroll={true}
+              panOnDrag={true}
+              preventScrolling={true}
+              nodesDraggable={false}
               style={{ background: 'transparent' }}
+              defaultEdgeOptions={{ type: 'smoothstep', style: { stroke: '#10b981', strokeWidth: 2 } }}
             >
               <Background color="#10b981" gap={16} opacity={0.1} />
-              <Controls />
+              <Controls showZoom={true} showFitView={true} showInteractive={false} />
             </ReactFlow>
           </div>
         )}
