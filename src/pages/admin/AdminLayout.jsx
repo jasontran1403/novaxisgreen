@@ -30,7 +30,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/members', label: 'Member Management', icon: '👥' },
     { path: '/admin/investments', label: 'Investment Management', icon: '💼' },
     { path: '/admin/binary-tree', label: 'Binary Tree', icon: '🌳' },
-    { path: '/admin/deposits', label: 'Deposit Management', icon: '💰' },
+    { path: '/admin/transactions', label: 'Transactions Management', icon: '💰' },
     { path: '/admin/withdraws', label: 'Withdraw Management', icon: '💸' },
     // { path: '/admin/commission-settings', label: 'Commission Settings', icon: '⚙️' },
     { path: '/admin/settings', label: 'Settings', icon: '🔧' },

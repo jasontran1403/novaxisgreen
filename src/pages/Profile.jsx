@@ -13,7 +13,7 @@ function Profile() {
   const [balanceLoading, setBalanceLoading] = useState(true);
   const [twoFAStatus, setTwoFAStatus] = useState({ enabled: false });
   const [twoFALoading, setTwoFALoading] = useState(true);
-  
+
   // Plan Information
   const [plan, setPlan] = useState(null);
   const [planLoading, setPlanLoading] = useState(true);
@@ -21,7 +21,7 @@ function Profile() {
   const [salesNetworkLoading, setSalesNetworkLoading] = useState(true);
   const [income24h, setIncome24h] = useState(0);
   const [income24hLoading, setIncome24hLoading] = useState(true);
-  
+
   // Change Password
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -131,6 +131,7 @@ function Profile() {
   }, []);
 
   // Handle change password
+  // Handle change password
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -147,30 +148,53 @@ function Profile() {
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('New password and confirm password do not match');
+      setPasswordError('New password and confirmation do not match');
       return;
     }
 
     try {
       setPasswordLoading(true);
-      const response = await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+      const response = await api.post(API_ENDPOINTS.USER.USER_CHANGE_PASSWORD, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       });
 
       if (response.success) {
-        setPasswordSuccess('Password changed successfully');
+        setPasswordSuccess('Changed password successfully!');
         setPasswordForm({
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
       } else {
-        setPasswordError(response.error || response.message || 'Failed to change password');
+        // Lấy lỗi từ backend (response.error hoặc response.message)
+        setPasswordError(response.error || response.message || 'Change password failed');
       }
     } catch (error) {
       console.error('Change password error:', error);
-      setPasswordError(error.response?.data?.error || error.response?.data?.message || 'Error changing password');
+
+      // Xử lý lỗi từ backend một cách chi tiết
+      let errMsg = 'There was an error changing the password';
+      if (error.response) {
+        const backendError = error.response.data?.error || error.response.data?.message;
+        if (backendError) {
+          // Dịch lỗi phổ biến sang tiếng Việt
+          if (backendError.toLowerCase().includes('current password is incorrect') ||
+            backendError.toLowerCase().includes('mật khẩu cũ không đúng')) {
+            errMsg = 'Old password is incorrect';
+          } else if (backendError.toLowerCase().includes('at least 6 characters')) {
+            errMsg = 'New password must be at least 6 characters';
+          } else {
+            errMsg = backendError;
+          }
+        } else {
+          errMsg = error.response.statusText || errMsg;
+        }
+      } else if (error.message) {
+        errMsg = error.message;
+      }
+
+      setPasswordError(errMsg);
     } finally {
       setPasswordLoading(false);
     }
@@ -289,7 +313,7 @@ function Profile() {
         handleChangePassword={handleChangePassword}
       />
 
-      <TwoFactorAuth
+      {/* <TwoFactorAuth
         twoFAStatus={twoFAStatus}
         twoFALoading={twoFALoading}
         twoFASecret={twoFASecret}
@@ -307,7 +331,7 @@ function Profile() {
         handleVerify2FA={handleVerify2FA}
         handleDisable2FA={handleDisable2FA}
         onCancel={handleCancel2FA}
-      />
+      /> */}
     </div>
   );
 }

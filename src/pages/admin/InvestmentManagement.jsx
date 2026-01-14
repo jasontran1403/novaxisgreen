@@ -15,6 +15,7 @@ function InvestmentManagement() {
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revoking, setRevoking] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
 
   // Marketing users state
   const [showMarketingModal, setShowMarketingModal] = useState(false);
@@ -50,18 +51,28 @@ function InvestmentManagement() {
   // Gọi fetch ngay khi chuyển trang (không debounce)
   useEffect(() => {
     fetchInvestments();
-  }, [page]);
+  }, [page, statusFilter]);
 
   const fetchInvestments = async () => {
     try {
       setLoading(true);
       setError('');
 
-      const params = { page, limit };
+      // Tạo params chỉ với các giá trị thực sự có ý nghĩa
+      const params = {
+        page,
+        limit
+      };
 
-      // Add username filter if exists
-      if (filters.username && filters.username.trim()) {
-        params.username = filters.username.trim();
+      // Chỉ thêm username nếu có giá trị sau trim
+      const trimmedUsername = filters.username?.trim();
+      if (trimmedUsername) {
+        params.username = trimmedUsername;
+      }
+
+      // Chỉ thêm status nếu statusFilter không rỗng
+      if (statusFilter && statusFilter.trim()) {
+        params.status = statusFilter.trim();
       }
 
       const res = await api.get(API_ENDPOINTS.ADMIN.INVESTMENTS, { params });
@@ -167,7 +178,11 @@ function InvestmentManagement() {
   };
 
   const updateFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    if (key === 'status') {
+      setStatusFilter(value);
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+    }
     setPage(1);
   };
 
@@ -191,32 +206,33 @@ function InvestmentManagement() {
       <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-4 md:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-emerald-400">Investment Management</h2>
-
-          {/* Marketing Users Button */}
-          {/* <button
-            onClick={handleShowMarketingModal}
-            className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 rounded text-purple-400 text-sm font-medium transition-all flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span>Marketing Users</span>
-          </button> */}
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-3 mb-4">
+        {/* Filters - thêm select status bên phải */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input
             type="text"
             placeholder="Search by username..."
             value={filters.username}
             onChange={(e) => updateFilter('username', e.target.value)}
-            className="px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-sm"
+            className="flex-1 px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-sm"
           />
+
+          {/* Nút filter Status */}
+          <select
+            value={statusFilter}
+            onChange={(e) => updateFilter('status', e.target.value)}
+            className="px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded-lg text-white focus:outline-none focus:border-emerald-500 text-sm min-w-[180px]"
+          >
+            <option value="">All Investments</option>
+            <option value="AccountLocked">Account Locked</option>
+            <option value="CommissionLocked">Commission Locked</option>
+            <option value="POPLocked">POP Locked</option>
+          </select>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
           <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
             <div className="text-xs text-slate-400">Total Investments</div>
             <div className="text-xl font-bold text-emerald-400">{pagination.total || 0}</div>
@@ -236,11 +252,6 @@ function InvestmentManagement() {
               <span className="text-slate-500"> / </span>
               <span className="text-blue-400">{completedCount}</span>
             </div>
-          </div>
-
-          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
-            <div className="text-xs text-slate-400">Revoked</div>
-            <div className="text-xl font-bold text-red-400">{revokedCount}</div>
           </div>
         </div>
 

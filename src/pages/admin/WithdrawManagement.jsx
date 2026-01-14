@@ -153,7 +153,7 @@ function WithdrawManagement() {
           >
             <option value="all">All Status</option>
             <option value="Pending">Pending</option>
-            <option value="Completed">Success</option>
+            <option value="Success">Success</option>
             <option value="Cancelled">Cancelled</option>
           </select>
         </div>

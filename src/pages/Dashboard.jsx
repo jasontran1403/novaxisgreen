@@ -149,6 +149,7 @@ function Dashboard() {
   };
 
   const novaPrice = statistics?.novaPrice || 0.1;
+  const todayIncome = statistics?.balance.todayIncome || 0;
 
   // Loading state
   if (loading && !statistics) {
@@ -261,6 +262,7 @@ function Dashboard() {
         <BalanceSection
           balance={balanceData}
           loading={loading}
+          todayIncome={todayIncome}
         />
 
         {/* Commission Statistics */}

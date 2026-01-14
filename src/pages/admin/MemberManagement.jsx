@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_ENDPOINTS } from '../../config/apiConfig';
+import { API_ENDPOINTS, API_BASE_URL } from '../../config/apiConfig';
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatCurrency';
 import debounce from 'lodash.debounce'; // Cài lodash nếu chưa có: npm install lodash
 import { useToast } from '../../customHook/useToast';
+import axios from 'axios';
 
 function MemberManagement() {
   const toast = useToast();
@@ -18,6 +19,7 @@ function MemberManagement() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [exportingTreeId, setExportingTreeId] = useState(null); // null = không loading, hoặc ID user đang export
 
   // Filters
   const [filters, setFilters] = useState({
@@ -76,6 +78,51 @@ function MemberManagement() {
       console.error('Fetch members error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportTree = async (memberId) => {
+    if (exportingTreeId !== null) return; // Ngăn click nhiều lần
+
+    setExportingTreeId(memberId); // Bắt đầu loading cho user này
+
+    try {
+      console.log('Exporting tree for ID:', memberId);
+
+      const response = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.ADMIN.EXPORT_TREE}`,
+        {
+          params: { id: memberId },
+          responseType: 'blob',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      const blob = response.data;
+
+      if (!blob || blob.size === 0) {
+        toast.error('File rỗng hoặc không có dữ liệu');
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tree-${memberId}-${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Đã tải file cây thành viên thành công!');
+    } catch (err) {
+      console.error('Export tree failed:', err);
+      toast.error('Không thể tải cây thành viên');
+    } finally {
+      setExportingTreeId(null); // Kết thúc loading
     }
   };
 
@@ -233,31 +280,10 @@ function MemberManagement() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-3 mb-4">
           <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
-            <div className="text-xs text-slate-400">Total Members</div>
+            <div className="text-xs text-emerald-400">Total Members</div>
             <div className="text-xl font-bold text-emerald-400">{pagination.total || 0}</div>
-          </div>
-          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
-            <div className="text-xs text-slate-400">Active Members</div>
-            <div className="text-xl font-bold text-green-400">
-              {members.filter(m => m.active !== false).length}
-            </div>
-          </div>
-          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
-            <div className="text-xs text-slate-400">Total Investment</div>
-            <div className="text-lg font-bold text-blue-400">
-              {formatCurrency(
-                members.reduce((sum, m) => sum + (m.totalInvestment || 0), 0),
-                'USDT'
-              )}
-            </div>
-          </div>
-          <div className="bg-slate-700/50 rounded-lg p-3 border border-emerald-500/30">
-            <div className="text-xs text-slate-400">VIP Members</div>
-            <div className="text-xl font-bold text-purple-400">
-              {members.filter(m => (m.vipLevel || 0) > 0).length}
-            </div>
           </div>
         </div>
 
@@ -346,7 +372,9 @@ function MemberManagement() {
                       <div className="flex gap-1.5 flex-wrap">
                         <button
                           onClick={() => fetchMemberDetail(member.id)}
-                          className="group relative px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 rounded transition-all flex items-center gap-1.5"
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Xem chi tiết"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,7 +392,9 @@ function MemberManagement() {
                             setSelectedMember(member);
                             setShowLockModal(true);
                           }}
-                          className="group relative px-2.5 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400 rounded transition-all flex items-center gap-1.5"
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 text-yellow-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Khóa/Mở khóa"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,7 +411,9 @@ function MemberManagement() {
                             setSelectedMember(member);
                             setShowUpdateModal(true);
                           }}
-                          className="group relative px-2.5 py-1.5 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 text-green-400 rounded transition-all flex items-center gap-1.5"
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 hover:border-green-500/50 text-green-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Chỉnh sửa"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,8 +431,10 @@ function MemberManagement() {
                               handleImpersonate(member.id);
                             }
                           }}
-                          className="group relative px-2.5 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded transition-all flex items-center gap-1.5"
-                          title="Đăng nhập thay"
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title="Đăng nhập"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -416,7 +450,9 @@ function MemberManagement() {
                             setSelectedMember(member);
                             setShowBalanceModal(true);
                           }}
-                          className="group relative px-2.5 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 hover:border-orange-500/50 text-orange-400 rounded transition-all flex items-center gap-1.5"
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 hover:border-orange-500/50 text-orange-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Thay đổi số dư"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,6 +461,26 @@ function MemberManagement() {
                           <span className="text-[10px] font-medium hidden sm:inline">Số dư</span>
                           <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
                             Thay đổi số dư
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => handleExportTree(member.id)}
+                          disabled={exportingTreeId !== null}
+                          className={`group relative px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 rounded transition-all flex items-center gap-1.5
+        ${exportingTreeId !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title="Xuất cây thành viên"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          <span className="text-[10px] font-medium hidden sm:inline">
+                            {exportingTreeId === member.id ? 'Đang tải...' : 'Export Tree'}
+                          </span>
+
+                          {/* Tooltip */}
+                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
+                            {exportingTreeId === member.id ? 'Đang xuất cây...' : 'Xuất cây thành viên (Tree)'}
                           </span>
                         </button>
                       </div>
@@ -623,14 +679,18 @@ function LockStatusModal({ member, onClose, onSave }) {
 }
 
 // Update Member Modal Component
+// Update Member Modal Component
 function UpdateMemberModal({ member, onClose, onSave }) {
   const [updateData, setUpdateData] = useState({
     email: member?.email || '',
     userRank: member?.userRank || 0,
     userLeaderRank: member?.userLeaderRank || 0,
+    extraCommission: member?.extraCommission || 0, // Thêm trường mới
     password: '',
     passwordChanged: member?.passwordChanged || false
   });
+
+  const [extraCommissionError, setExtraCommissionError] = useState('');
 
   // Rank options (Bronze, Silver, Gold, ...)
   const rankOptions = [
@@ -652,14 +712,48 @@ function UpdateMemberModal({ member, onClose, onSave }) {
     label: `Level ${i}`
   }));
 
+  // Validate Extra Commission khi thay đổi
+  const handleExtraCommissionChange = (e) => {
+    const value = e.target.value.trim();
+
+    // Xóa lỗi cũ
+    setExtraCommissionError('');
+
+    // Chỉ cho phép số nguyên 0-100
+    if (value === '') {
+      setUpdateData(prev => ({ ...prev, extraCommission: 0 }));
+      return;
+    }
+
+    if (!/^\d+$/.test(value)) {
+      setExtraCommissionError('Chỉ được nhập số nguyên (0-100)');
+      return;
+    }
+
+    const num = parseInt(value, 10);
+    if (num < 0 || num > 100) {
+      setExtraCommissionError('Giá trị phải từ 0 đến 100');
+      return;
+    }
+
+    setUpdateData(prev => ({ ...prev, extraCommission: num }));
+  };
+
   const handleSave = () => {
     // Validation
     if (!updateData.email.trim()) {
       alert('Email is required');
       return;
     }
+
     if (updateData.password && updateData.password.length < 6) {
       alert('Password must be at least 6 characters');
+      return;
+    }
+
+    // Validate Extra Commission trước khi save
+    if (updateData.extraCommission < 0 || updateData.extraCommission > 100) {
+      alert('Extra Commission phải từ 0 đến 100');
       return;
     }
 
@@ -676,7 +770,7 @@ function UpdateMemberModal({ member, onClose, onSave }) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800 border border-emerald-500/50 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-semibold text-emerald-400 mb-4">Update Member</h3>
-        
+
         <div className="space-y-4">
           {/* Email */}
           <div>
@@ -692,7 +786,7 @@ function UpdateMemberModal({ member, onClose, onSave }) {
             />
           </div>
 
-          {/* User Rank (Bronze, Silver, Gold, ...) */}
+          {/* User Rank */}
           <div>
             <label className="block text-sm text-slate-300 mb-1">
               User Rank (VIP Level)
@@ -708,12 +802,9 @@ function UpdateMemberModal({ member, onClose, onSave }) {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-slate-400 mt-1">
-              Current: {rankOptions.find(r => r.value === member?.userRank)?.label || 'NO RANK'}
-            </p>
           </div>
 
-          {/* User Leader Rank (Level 0, Level 1, ...) */}
+          {/* User Leader Rank */}
           <div>
             <label className="block text-sm text-slate-300 mb-1">
               Leader Rank
@@ -729,8 +820,33 @@ function UpdateMemberModal({ member, onClose, onSave }) {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Extra Commission - Trường mới */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">
+              Extra Commission (%) <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text" // Dùng text để dễ control input
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={updateData.extraCommission}
+              onChange={handleExtraCommissionChange}
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              placeholder="0 - 100"
+              className={`w-full px-3 py-2 bg-slate-700 border ${extraCommissionError ? 'border-red-500' : 'border-emerald-500/30'
+                } rounded text-white focus:outline-none focus:border-emerald-500`}
+            />
+            {extraCommissionError && (
+              <p className="text-xs text-red-400 mt-1">{extraCommissionError}</p>
+            )}
             <p className="text-xs text-slate-400 mt-1">
-              Current: Level {member?.userLeaderRank || 0}
+              Current: {member?.extraCommission || 0}%
             </p>
           </div>
 
@@ -784,9 +900,6 @@ function UpdateMemberModal({ member, onClose, onSave }) {
                 </span>
               </label>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Current: {member?.passwordChanged ? 'Changed ✓' : 'Not Changed ✗'}
-            </p>
           </div>
 
           {/* Info Box */}
@@ -798,9 +911,9 @@ function UpdateMemberModal({ member, onClose, onSave }) {
               <div className="text-xs text-blue-300">
                 <p className="font-medium mb-1">Update Notes:</p>
                 <ul className="list-disc list-inside space-y-1 text-blue-200/80">
+                  <li>Extra Commission: 0-100% (số nguyên)</li>
                   <li>Password will be hashed automatically if provided</li>
                   <li>Leave password empty to keep current password</li>
-                  <li>If "Not Changed" is selected, user must change password on next login</li>
                 </ul>
               </div>
             </div>

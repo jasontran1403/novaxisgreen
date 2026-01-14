@@ -33,6 +33,7 @@ import WalletConfig from './pages/admin/WalletConfig'
 import WithdrawManagement from './pages/admin/WithdrawManagement'
 import { ToastProvider } from './contexts/ToastProvider'
 import InvestmentManagement from './pages/admin/InvestmentManagement'
+import TransactionManagement from './pages/admin/TransactionManagement'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -298,11 +299,11 @@ function App() {
               }
             />
             <Route
-              path="/admin/deposits"
+              path="/admin/transactions"
               element={
                 <AdminRoute>
                   <AdminLayout>
-                    <DepositManagement />
+                    <TransactionManagement />
                   </AdminLayout>
                 </AdminRoute>
               }

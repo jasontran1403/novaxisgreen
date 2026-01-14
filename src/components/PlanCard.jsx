@@ -1,7 +1,7 @@
 import { RefreshCw } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 
-function PlanCard({ plan, loading, onRefresh }) {
+function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
   const getMaxoutColorClass = (remaining, total) => {
     if (!total || total <= 0) return 'text-slate-400';
 

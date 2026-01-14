@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/formatCurrency';
 
-function BalanceSection({ balance, commissions, loading = false }) {
+function BalanceSection({ balance, commissions, todayIncome, loading = false }) {
   const navigate = useNavigate();
 
   // Lấy giá trị từ balance object - API mới đã tính sẵn
@@ -32,19 +32,9 @@ function BalanceSection({ balance, commissions, loading = false }) {
         </svg>
       ),
       subLines: [
-        { label: `≈ ${formatCurrency(novaValueInUsdt, 'USDT')}`}
+        { label: `≈ ${formatCurrency(novaValueInUsdt, 'USDT')}` }
       ]
     },
-    // {
-    //   label: 'Daily Interest Balance',
-    //   value: formatCurrency(dailyBalance, balance?.currency || 'USDT'),
-    //   color: 'blue',
-    //   icon: (
-    //     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    //     </svg>
-    //   )
-    // },
     {
       label: 'Total Income',
       value: formatCurrency(dailyBalance + totalCommission, balance?.incomeCurrency || 'USDT'),
@@ -58,7 +48,17 @@ function BalanceSection({ balance, commissions, loading = false }) {
         { label: 'Daily Interest', value: formatCurrency(dailyBalance, balance?.incomeCurrency || 'USDT') },
         { label: 'Total Commissions', value: formatCurrency(totalCommission, balance?.incomeCurrency || 'USDT') }
       ]
-    }
+    },
+    {
+      label: '24h Income',
+      value: formatCurrency(todayIncome, 'USDT'),
+      color: 'blue',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
   ];
 
   const colorClasses = {
@@ -104,7 +104,7 @@ function BalanceSection({ balance, commissions, loading = false }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {balanceCards.map((card, index) => {
           const colors = colorClasses[card.color];
-          
+
           // Mapping card label to target route
           const handleClick = () => {
             if (card.label === 'Balance USDT') {
@@ -129,10 +129,10 @@ function BalanceSection({ balance, commissions, loading = false }) {
             >
               {/* Animated gradient overlay */}
               <div className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-              
+
               {/* Decorative gradient circle */}
               <div className={`absolute top-0 right-0 w-24 h-24 ${colors.bg} rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
-              
+
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-2">
                   <p className={`text-xs ${colors.textLight} font-medium`}>

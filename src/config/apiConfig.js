@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
   USER: {
     NOVA_PRICE: '/api/user/nova-price',
     CHANGE_PASSWORD: '/api/user/change-password',
+    USER_CHANGE_PASSWORD: '/api/user/user-change-password',
     PASSWORD_STATUS: '/api/user/password-status',
     STATISTIC: '/api/user/statistic',
     MY_REFLINKS: '/api/user/my-reflinks',
@@ -96,6 +97,7 @@ export const API_ENDPOINTS = {
     // Members
     MEMBERS: '/api/admin/members',
     MEMBERS_EXPORT: '/api/admin/members/export',
+    EXPORT_TREE: '/api/admin/export-tree',
     MEMBER_DETAIL: (id) => `/api/admin/members/${id}`,
     MEMBER_UPDATE: (id) => `/api/admin/members/${id}`,
     MEMBER_LOCK: (id) => `/api/admin/members/${id}/lock`,
@@ -115,6 +117,9 @@ export const API_ENDPOINTS = {
     COMMISSION_DIRECT: '/api/admin/commission-settings/direct',
     COMMISSION_COMPOUND: '/api/admin/commission-settings/compound',
     COMMISSION_VIP: '/api/admin/commission-settings/vip',
+
+    TRANSCATIONS: '/api/admin/transactions',
+
 
     // Settings
     SETTINGS_ADMINS: '/api/admin/settings/admins',
