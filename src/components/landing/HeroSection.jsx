@@ -33,7 +33,7 @@ function HeroSection() {
           </div>
 
           {/* Right Column - Countdown & Payment Icons */}
-          <div className="text-center">
+          {/* <div className="text-center">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 border border-cyan-500/50">
               <h3 className="text-2xl font-bold text-white mb-6">
                 ICO Starts in
@@ -60,7 +60,7 @@ function HeroSection() {
                 <i className="fab fa-ethereum"></i>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

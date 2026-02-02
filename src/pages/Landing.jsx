@@ -83,7 +83,7 @@ function Landing() {
       <div id="particles-js" className="fixed inset-0 -z-10"></div>
       
       <LandingNavbar />
-      {/* <HeroSection /> */}
+      <HeroSection />
       <VisionMission />
       <GreenEnergyStory />
       <Ecosystem />
