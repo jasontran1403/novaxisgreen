@@ -69,7 +69,6 @@ export const quickActions = [
 
 // Banner Images
 export const bannerImages = [
-  'https://res.cloudinary.com/dijayprrw/image/upload/v1765789377/photo_6197454031232371677_y_vlypyi.jpg',
   'https://res.cloudinary.com/dijayprrw/image/upload/v1765567513/Screenshot_2025-12-13_022455_ybi7o9.png',
   'https://res.cloudinary.com/dijayprrw/image/upload/v1765567568/Screenshot_2025-12-13_022551_owmrsk.png',
   'https://res.cloudinary.com/dijayprrw/image/upload/v1765567623/Screenshot_2025-12-13_022651_br0ual.png'
