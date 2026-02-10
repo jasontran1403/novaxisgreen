@@ -19,7 +19,7 @@ function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
     <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-4 md:p-6 glow-border">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-emerald-400 dark:text-emerald-300">
-          Plan Information
+          Personal Information
         </h2>
         {onRefresh && (
           <button
@@ -33,13 +33,20 @@ function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {/* User Rank */}
         <div className="space-y-1">
           <p className="text-xs text-emerald-400 dark:text-emerald-300">User Rank</p>
           <p className="text-lg font-bold text-white">
-            {loading ? '...' : `${plan.userRank} - ${plan.leaderRank}`}
+            {loading ? '...' : (
+              <>
+                RANK {plan.userRank}
+                <br />
+                LEADER {plan.leaderRank}
+              </>
+            )}
           </p>
+
         </div>
 
         {/* Total Investments */}
@@ -47,6 +54,20 @@ function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
           <p className="text-xs text-emerald-400 dark:text-emerald-300">Total Investments</p>
           <p className="text-lg font-bold text-white">
             {loading ? '...' : `${plan.totalInvestment.toLocaleString()} ${plan.currency}`}
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-xs text-emerald-400 dark:text-emerald-300">Team Sales Left</p>
+          <p className="text-lg font-bold text-white">
+            {loading ? '...' : `${plan.leftSales.toLocaleString()} ${plan.currency}`}
+          </p>
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-xs text-emerald-400 dark:text-emerald-300">Team Sales Right</p>
+          <p className="text-lg font-bold text-white">
+            {loading ? '...' : `${plan.rightSales.toLocaleString()} ${plan.currency}`}
           </p>
         </div>
 
@@ -71,8 +92,8 @@ function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
           <p className="text-xs text-emerald-400 dark:text-emerald-300">Maxout Used</p>
           <p
             className={`text-lg font-bold ${loading
-                ? 'text-slate-400'
-                : getMaxoutColorClass(plan.maxoutRemaining, plan.totalMaxout)
+              ? 'text-slate-400'
+              : getMaxoutColorClass(plan.maxoutRemaining, plan.totalMaxout)
               }`}
           >
             {loading

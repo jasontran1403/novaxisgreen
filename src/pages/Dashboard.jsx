@@ -102,6 +102,8 @@ function Dashboard() {
     userRank: statistics.plan.userRank || '—',
     leaderRank: statistics.plan.leaderRank || '-',
     totalInvestment: statistics.plan.totalInvestment || 0,
+    leftSales: statistics.plan.leftSales || 0,
+    rightSales: statistics.plan.rightSales || 0,
     totalDirectMember: statistics.plan.totalDirectMember || 0,
     totalSalesFromDirect: statistics.plan.totalSalesFromDirect || 0,
     maxoutRemaining: statistics.plan.maxoutRemaining || 0,
