@@ -11,10 +11,6 @@ export const API_ENDPOINTS = {
     REGISTER: '/api/auth/register',
     ME: '/api/auth/me',
     LOGOUT: '/api/auth/logout',    
-    GET_2FA_STATUS: '/api/auth/2fa/status',
-    ENABLE_2FA: '/api/auth/2fa/enable',
-    VERIFY_2FA: '/api/auth/2fa/verify',
-    DISABLE_2FA: '/api/auth/2fa/disable',
   },
 
   // Reflink - NEW ENDPOINTS
@@ -26,6 +22,9 @@ export const API_ENDPOINTS = {
   // User
   USER: {
     NOVA_PRICE: '/api/user/nova-price',
+    GET_2FA_INFO: '/api/user/2fa/info',
+    ENABLE_2FA: '/api/user/2fa/enable',
+    DISABLE_2FA: '/api/user/2fa/disable',
     CHANGE_PASSWORD: '/api/user/change-password',
     USER_CHANGE_PASSWORD: '/api/user/user-change-password',
     PASSWORD_STATUS: '/api/user/password-status',
@@ -83,6 +82,10 @@ export const API_ENDPOINTS = {
     AUTH_LOGOUT: '/api/admin/logout',
     AUTH_CHECK: '/api/admin/check',
     PAY_DAILY: '/api/auth/pay-daily',
+
+    GET_2FA_INFO: '/api/admin/2fa/info',
+    ENABLE_2FA: '/api/admin/2fa/enable',
+    DISABLE_2FA: '/api/admin/2fa/disable',
 
     // Dashboard
     DASHBOARD_STATS: '/api/admin/dashboard/stats',

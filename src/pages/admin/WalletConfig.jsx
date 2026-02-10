@@ -3,9 +3,18 @@ import { API_ENDPOINTS } from '../../config/apiConfig';
 import api from '../../services/api';
 
 function WalletConfig() {
-  const [bscWalletAddress, setBscWalletAddress] = useState('');
-  const [bscPrivateKey, setBscPrivateKey] = useState('');
-  const [novaPrice, setNovaPrice] = useState('');
+  const [config, setConfig] = useState({
+    bscWalletAddress: '',
+    bscPrivateKey: '',
+    novaPrice: '',
+    autoPayUsdt: 0,
+    autoPayNova: 0,
+    fromUsdt: '',
+    toUsdt: '',
+    fromNova: '',
+    toNova: ''
+  });
+
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,10 +30,18 @@ function WalletConfig() {
       setLoading(true);
       setError('');
       const res = await api.get(API_ENDPOINTS.ADMIN.WALLET_CONFIG);
-      if (res.success) {
-        setBscWalletAddress(res.data?.bscWalletAddress || '');
-        setBscPrivateKey(res.data?.bscPrivateKey || '');
-        setNovaPrice(res.data?.novaPrice?.toString() || '');
+      if (res.success && res.data) {
+        setConfig({
+          bscWalletAddress: res.data.bscWalletAddress || '',
+          bscPrivateKey: res.data.bscPrivateKey || '',
+          novaPrice: res.data.novaPrice?.toString() || '',
+          autoPayUsdt: res.data.autoPayUsdt ?? 0,
+          autoPayNova: res.data.autoPayNova ?? 0,
+          fromUsdt: res.data.fromUsdt?.toString() || '0',
+          toUsdt: res.data.toUsdt?.toString() || '0',
+          fromNova: res.data.fromNova?.toString() || '0',
+          toNova: res.data.toNova?.toString() || '0'
+        });
       } else {
         setError(res.error || 'Không thể tải cấu hình ví');
       }
@@ -35,273 +52,299 @@ function WalletConfig() {
     }
   };
 
+  const handleChange = (field) => (e) => {
+    const value = e.target.type === 'checkbox' ? (e.target.checked ? 1 : 0) : e.target.value;
+    setConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const validateAddress = (addr) => !addr || (addr.startsWith('0x') && addr.length === 42 && /^0x[a-fA-F0-9]{40}$/.test(addr));
+  const validatePrivateKey = (key) => !key || /^[a-fA-F0-9]{64}$/.test(key.startsWith('0x') ? key.slice(2) : key);
+  const validatePrice = (price) => !price || (parseFloat(price) > 0 && !isNaN(parseFloat(price)));
+  const validateRange = (from, to) => {
+    const f = parseFloat(from);
+    const t = parseFloat(to);
+    return isNaN(f) || isNaN(t) || f <= t;
+  };
+
+  const isValid = {
+    bscWalletAddress: validateAddress(config.bscWalletAddress),
+    bscPrivateKey: validatePrivateKey(config.bscPrivateKey),
+    novaPrice: validatePrice(config.novaPrice),
+    usdtRange: validateRange(config.fromUsdt, config.toUsdt),
+    novaRange: validateRange(config.fromNova, config.toNova)
+  };
+
+  const hasError = Object.values(isValid).some((v) => !v);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (hasError) return;
+
     setSaving(true);
     setError('');
     setSuccess('');
 
     try {
       const payload = {};
-      
-      // Gửi tất cả các field hiện tại
-      if (bscWalletAddress.trim()) {
-        payload.bscWalletAddress = bscWalletAddress.trim();
-      }
-      
-      if (bscPrivateKey.trim()) {
-        payload.bscPrivateKey = bscPrivateKey.trim();
-      }
-      
-      if (novaPrice.trim()) {
-        const price = parseFloat(novaPrice);
-        if (!isNaN(price) && price > 0) {
-          payload.novaPrice = price;
-        }
-      }
-      
+
+      // Chỉ gửi field nếu có giá trị hoặc thay đổi
+      if (config.bscWalletAddress.trim()) payload.bscWalletAddress = config.bscWalletAddress.trim();
+      if (config.bscPrivateKey.trim()) payload.bscPrivateKey = config.bscPrivateKey.trim();
+      if (config.novaPrice.trim()) payload.novaPrice = parseFloat(config.novaPrice);
+
+      payload.autoPayUsdt = config.autoPayUsdt;
+      payload.autoPayNova = config.autoPayNova;
+      payload.fromUsdt = parseFloat(config.fromUsdt) || 0;
+      payload.toUsdt = parseFloat(config.toUsdt) || 0;
+      payload.fromNova = parseFloat(config.fromNova) || 0;
+      payload.toNova = parseFloat(config.toNova) || 0;
+
       const res = await api.post(API_ENDPOINTS.ADMIN.WALLET_CONFIG, payload);
 
       if (res.success) {
-        setSuccess(res.message || 'Cấu hình đã được cập nhật thành công!');
-        
-        // Cập nhật với data mới từ server
-        if (res.data) {
-          setBscWalletAddress(res.data.bscWalletAddress || '');
-          setBscPrivateKey(res.data.bscPrivateKey || '');
-          setNovaPrice(res.data.novaPrice?.toString() || '');
-        }
-        
-        // Auto-hide success message sau 3 giây
-        setTimeout(() => setSuccess(''), 3000);
+        setSuccess('Cấu hình đã được cập nhật thành công!');
+        setTimeout(() => setSuccess(''), 4000);
+
+        // Cập nhật lại từ server để đồng bộ
+        fetchWalletConfig();
       } else {
         setError(res.error || 'Không thể cập nhật cấu hình');
       }
     } catch (err) {
-      setError(err.message || 'Không thể cập nhật cấu hình');
+      setError(err.message || 'Lỗi khi lưu cấu hình');
     } finally {
       setSaving(false);
     }
   };
 
-  const validateAddress = (address) => {
-    if (!address || address.trim() === '') return true;
-    const trimmed = address.trim();
-    return trimmed.startsWith('0x') && trimmed.length === 42 && /^0x[a-fA-F0-9]{40}$/.test(trimmed);
-  };
-
-  const validatePrivateKey = (privateKey) => {
-    if (!privateKey || privateKey.trim() === '') return true;
-    const trimmed = privateKey.trim();
-    const hexOnly = trimmed.startsWith('0x') ? trimmed.slice(2) : trimmed;
-    return /^[a-fA-F0-9]{64}$/.test(hexOnly);
-  };
-
-  const validateNovaPrice = (price) => {
-    if (!price || price.trim() === '') return true;
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0;
-  };
-
   const copyToClipboard = (text, label) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setSuccess(`Đã copy ${label} vào clipboard!`);
-      setTimeout(() => setSuccess(''), 2000);
-    }).catch(() => {
-      setError(`Không thể copy ${label}`);
-    });
+    navigator.clipboard.writeText(text);
+    setSuccess(`Đã sao chép ${label}!`);
+    setTimeout(() => setSuccess(''), 2000);
   };
-
-  const isBscAddressValid = validateAddress(bscWalletAddress);
-  const isBscPrivateKeyValid = validatePrivateKey(bscPrivateKey);
-  const isNovaPriceValid = validateNovaPrice(novaPrice);
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-6">
-          <div className="text-center text-slate-400">Đang tải...</div>
-        </div>
-      </div>
-    );
+    return <div className="text-center py-10 text-slate-400">Đang tải cấu hình...</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-slate-800 rounded-lg border border-emerald-500/50 p-3 sm:p-4 md:p-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-emerald-400 mb-4 sm:mb-6">
-          Cấu hình ví tổng & Giá NOVA
-        </h2>
+    <div className="space-y-6">
+      <div className="bg-slate-800 rounded-xl border border-emerald-500/40 p-6 shadow-lg">
+        <h2 className="text-2xl font-bold text-emerald-400 mb-6">Cấu hình Ví Tổng & Auto Pay</h2>
 
         {error && (
-          <div className="mb-3 sm:mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-xs sm:text-sm">
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-red-300">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-3 sm:mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400 text-xs sm:text-sm">
+          <div className="mb-6 p-4 bg-emerald-900/30 border border-emerald-500/50 rounded-lg text-emerald-300">
             {success}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* BSC Wallet Address */}
-          <div>
-            <label className="block text-sm font-medium text-emerald-400 mb-2">
-              Địa chỉ ví tổng BSC
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={bscWalletAddress}
-                onChange={(e) => setBscWalletAddress(e.target.value)}
-                placeholder="0x..."
-                className={`flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none ${
-                  bscWalletAddress && !isBscAddressValid
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-emerald-500/30 focus:border-emerald-500'
-                }`}
-              />
-              {bscWalletAddress && (
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(bscWalletAddress, 'địa chỉ ví')}
-                  className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 rounded-lg text-emerald-400 transition-colors text-sm shrink-0"
-                  title="Copy địa chỉ"
-                >
-                  📋
-                </button>
-              )}
-            </div>
-            {bscWalletAddress && !isBscAddressValid && (
-              <p className="mt-1 text-xs text-red-400">
-                Địa chỉ ví không hợp lệ (phải bắt đầu bằng 0x và có 42 ký tự)
-              </p>
-            )}
-            {bscWalletAddress && isBscAddressValid && (
-              <p className="mt-1 text-xs text-green-400">✓ Địa chỉ ví hợp lệ</p>
-            )}
-          </div>
-
-          {/* BSC Private Key */}
-          <div>
-            <label className="block text-sm font-medium text-amber-400 mb-2">
-              Private Key ví tổng BSC
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 relative">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Phần BSC Wallet */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* BSC Wallet Address */}
+            <div>
+              <label className="block text-sm font-medium text-emerald-300 mb-2">
+                Địa chỉ ví tổng BSC
+              </label>
+              <div className="flex">
                 <input
-                  type={showPrivateKey ? 'text' : 'password'}
-                  value={bscPrivateKey}
-                  onChange={(e) => setBscPrivateKey(e.target.value)}
-                  placeholder="Nhập private key (64 ký tự hex)"
-                  className={`w-full px-3 sm:px-4 py-2 pr-10 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none font-mono ${
-                    bscPrivateKey && !isBscPrivateKeyValid
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-amber-500/30 focus:border-amber-500'
+                  type="text"
+                  value={config.bscWalletAddress}
+                  onChange={handleChange('bscWalletAddress')}
+                  placeholder="0x..."
+                  className={`flex-1 px-4 py-3 bg-slate-700 border rounded-l-lg text-white focus:outline-none focus:ring-2 ${
+                    config.bscWalletAddress && !isValid.bscWalletAddress
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-emerald-600/50 focus:ring-emerald-500'
                   }`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPrivateKey(!showPrivateKey)}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-amber-400 text-sm"
-                  title={showPrivateKey ? 'Ẩn' : 'Hiện'}
-                >
-                  {showPrivateKey ? '🙈' : '👁️'}
-                </button>
+                {config.bscWalletAddress && (
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(config.bscWalletAddress, 'địa chỉ ví')}
+                    className="px-4 bg-emerald-700/50 hover:bg-emerald-600 border border-emerald-600 rounded-r-lg text-emerald-200"
+                  >
+                    📋
+                  </button>
+                )}
               </div>
-              {bscPrivateKey && (
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(
-                    bscPrivateKey.startsWith('0x') ? bscPrivateKey : `0x${bscPrivateKey}`,
-                    'private key'
-                  )}
-                  className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 rounded-lg text-amber-400 transition-colors text-sm shrink-0"
-                  title="Copy private key"
-                >
-                  📋
-                </button>
+              {config.bscWalletAddress && !isValid.bscWalletAddress && (
+                <p className="mt-1 text-xs text-red-400">Địa chỉ không hợp lệ (0x + 40 hex)</p>
               )}
             </div>
-            {bscPrivateKey && !isBscPrivateKeyValid && (
-              <p className="mt-1 text-xs text-red-400">
-                Private key không hợp lệ (phải là 64 ký tự hex, có thể có prefix 0x)
-              </p>
-            )}
-            {bscPrivateKey && isBscPrivateKeyValid && (
-              <p className="mt-1 text-xs text-green-400">✓ Private key hợp lệ</p>
-            )}
-            {bscPrivateKey && (
-              <p className="mt-1 text-xs text-amber-400/70">
-                ⚠️ Không chia sẻ private key với bất kỳ ai!
-              </p>
-            )}
+
+            {/* BSC Private Key */}
+            <div>
+              <label className="block text-sm font-medium text-amber-300 mb-2">
+                Private Key ví tổng BSC
+              </label>
+              <div className="flex">
+                <div className="relative flex-1">
+                  <input
+                    type={showPrivateKey ? 'text' : 'password'}
+                    value={config.bscPrivateKey}
+                    onChange={handleChange('bscPrivateKey')}
+                    placeholder="64 ký tự hex..."
+                    className={`w-full px-4 py-3 pr-12 bg-slate-700 border rounded-l-lg text-white font-mono focus:outline-none focus:ring-2 ${
+                      config.bscPrivateKey && !isValid.bscPrivateKey
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-amber-600/50 focus:ring-amber-500'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivateKey(!showPrivateKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-300"
+                  >
+                    {showPrivateKey ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {config.bscPrivateKey && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard(
+                        config.bscPrivateKey.startsWith('0x') ? config.bscPrivateKey : `0x${config.bscPrivateKey}`,
+                        'private key'
+                      )
+                    }
+                    className="px-4 bg-amber-700/50 hover:bg-amber-600 border border-amber-600 rounded-r-lg text-amber-200"
+                  >
+                    📋
+                  </button>
+                )}
+              </div>
+              {config.bscPrivateKey && !isValid.bscPrivateKey && (
+                <p className="mt-1 text-xs text-red-400">Private key không hợp lệ (64 hex)</p>
+              )}
+              {config.bscPrivateKey && (
+                <p className="mt-1 text-xs text-amber-400/80">⚠️ Tuyệt đối không chia sẻ!</p>
+              )}
+            </div>
           </div>
 
-          {/* NOVA Price */}
+          {/* Giá NOVA */}
           <div>
-            <label className="block text-sm font-medium text-emerald-400 mb-2">
-              Giá NOVA (USD)
-            </label>
+            <label className="block text-sm font-medium text-emerald-300 mb-2">Giá NOVA (USD)</label>
             <div className="relative">
-              <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
-                $
-              </span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
               <input
                 type="number"
                 step="0.0001"
                 min="0"
-                value={novaPrice}
-                onChange={(e) => setNovaPrice(e.target.value)}
+                value={config.novaPrice}
+                onChange={handleChange('novaPrice')}
                 placeholder="0.1000"
-                className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base bg-slate-700 border rounded-lg text-white placeholder-slate-400 focus:outline-none ${
-                  novaPrice && !isNovaPriceValid
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'border-emerald-500/30 focus:border-emerald-500'
+                className={`w-full pl-10 px-4 py-3 bg-slate-700 border rounded-lg text-white focus:outline-none focus:ring-2 ${
+                  config.novaPrice && !isValid.novaPrice
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-emerald-600/50 focus:ring-emerald-500'
                 }`}
               />
             </div>
-            {novaPrice && !isNovaPriceValid && (
-              <p className="mt-1 text-xs text-red-400">Giá NOVA phải lớn hơn 0</p>
-            )}
-            {novaPrice && isNovaPriceValid && (
-              <p className="mt-1 text-xs text-green-400">
-                ✓ Giá hợp lệ: ${parseFloat(novaPrice).toFixed(4)}
-              </p>
+            {config.novaPrice && !isValid.novaPrice && (
+              <p className="mt-1 text-xs text-red-400">Giá phải lớn hơn 0</p>
             )}
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end pt-2">
+          {/* Auto Pay Settings */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-emerald-500/30">
+            {/* Auto Pay USDT */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-lg font-medium text-cyan-300">Auto Pay USDT</label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.autoPayUsdt === 1}
+                    onChange={handleChange('autoPayUsdt')}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-cyan-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Giới hạn (USDT)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={config.toUsdt}
+                    onChange={handleChange('toUsdt')}
+                    className={`w-full px-4 py-2.5 bg-slate-700 border rounded-lg text-white focus:outline-none focus:ring-2 ${
+                      !isValid.usdtRange ? 'border-red-500 focus:ring-red-500' : 'border-cyan-600/50 focus:ring-cyan-500'
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Auto Pay NOVA */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-lg font-medium text-purple-300">Auto Pay NOVA</label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.autoPayNova === 1}
+                    onChange={handleChange('autoPayNova')}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-300 mb-1">Giới hạn (NOVA)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.0001"
+                    value={config.toNova}
+                    onChange={handleChange('toNova')}
+                    className={`w-full px-4 py-2.5 bg-slate-700 border rounded-lg text-white focus:outline-none focus:ring-2 ${
+                      !isValid.novaRange ? 'border-red-500 focus:ring-red-500' : 'border-purple-600/50 focus:ring-purple-500'
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nút Lưu */}
+          <div className="pt-6 flex justify-end">
             <button
               type="submit"
-              disabled={
-                saving ||
-                (bscWalletAddress && !isBscAddressValid) ||
-                (bscPrivateKey && !isBscPrivateKeyValid) ||
-                (novaPrice && !isNovaPriceValid)
-              }
-              className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                saving ||
-                (bscWalletAddress && !isBscAddressValid) ||
-                (bscPrivateKey && !isBscPrivateKeyValid) ||
-                (novaPrice && !isNovaPriceValid)
-                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
+              disabled={saving || hasError}
+              className={`px-8 py-3 rounded-lg font-medium transition-all shadow-lg ${
+                saving || hasError
+                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
               }`}
             >
               {saving ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Đang lưu...
                 </span>
               ) : (
-                'Lưu cấu hình'
+                'Lưu toàn bộ cấu hình'
               )}
             </button>
           </div>

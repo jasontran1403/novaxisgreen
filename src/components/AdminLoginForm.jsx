@@ -4,19 +4,17 @@ import api from '../services/api';
 
 function AdminLoginForm() {
   const [formData, setFormData] = useState({
-    identifier: '', // Email hoặc username
+    identifier: '',
     password: '',
-    twoFactorCode: '' // Mã 2FA
+    twoFACode: ''
   });
   const [errors, setErrors] = useState({
     identifier: '',
     password: '',
-    twoFactorCode: '',
+    twoFACode: '',
     general: ''
   });
   const [loading, setLoading] = useState(false);
-
-  // State để toggle show/hide password
   const [showPassword, setShowPassword] = useState(false);
 
   // Validation functions
@@ -36,9 +34,9 @@ function AdminLoginForm() {
 
   const validateTwoFactorCode = (code) => {
     const trimmed = code.trim();
-    if (!trimmed) {
-      return 'Vui lòng nhập mã 2FA';
-    }
+    // Nếu không nhập → optional, không báo lỗi
+    if (!trimmed) return '';
+
     if (!/^\d{6}$/.test(trimmed)) {
       return 'Mã 2FA phải là 6 chữ số';
     }
@@ -47,11 +45,14 @@ function AdminLoginForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Giới hạn chỉ số cho twoFACode
+    const finalValue = name === 'twoFACode' ? value.replace(/\D/g, '').slice(0, 6) : value;
+
     setFormData({
       ...formData,
-      [name]: value
+      [name]: finalValue
     });
-    
+
     setErrors({
       ...errors,
       [name]: '',
@@ -67,7 +68,7 @@ function AdminLoginForm() {
       error = validateIdentifier(value);
     } else if (name === 'password') {
       error = validatePassword(value);
-    } else if (name === 'twoFactorCode') {
+    } else if (name === 'twoFACode') {
       error = validateTwoFactorCode(value);
     }
 
@@ -79,23 +80,23 @@ function AdminLoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     setErrors({
       identifier: '',
       password: '',
-      twoFactorCode: '',
+      twoFACode: '',
       general: ''
     });
 
     const identifierError = validateIdentifier(formData.identifier);
     const passwordError = validatePassword(formData.password);
-    const twoFactorError = validateTwoFactorCode(formData.twoFactorCode);
+    const twoFactorError = validateTwoFactorCode(formData.twoFACode);
 
     if (identifierError || passwordError || twoFactorError) {
       setErrors({
         identifier: identifierError,
         password: passwordError,
-        twoFactorCode: twoFactorError,
+        twoFACode: twoFactorError,
         general: ''
       });
       return;
@@ -106,15 +107,15 @@ function AdminLoginForm() {
     try {
       const isEmail = formData.identifier.includes('@');
       const loginData = isEmail
-        ? { 
-            email: formData.identifier, 
+        ? {
+            email: formData.identifier,
             password: formData.password,
-            twoFactorCode: formData.twoFactorCode.trim() 
+            twoFACode: formData.twoFACode.trim() || undefined // chỉ gửi nếu có giá trị
           }
-        : { 
-            username: formData.identifier, 
+        : {
+            username: formData.identifier,
             password: formData.password,
-            twoFactorCode: formData.twoFactorCode.trim() 
+            twoFACode: formData.twoFACode.trim() || undefined
           };
 
       const result = await api.post(API_ENDPOINTS.AUTH.ADMIN_LOGIN, loginData, false);
@@ -127,39 +128,39 @@ function AdminLoginForm() {
         setErrors({
           identifier: '',
           password: '',
-          twoFactorCode: '',
+          twoFACode: '',
           general: result.error || 'Đăng nhập thất bại'
         });
       }
     } catch (err) {
       const errorMessage = err.message || 'Đăng nhập thất bại';
-      
+
       if (errorMessage.includes('không đúng') || errorMessage.includes('incorrect')) {
         setErrors({
           identifier: '',
           password: '',
-          twoFactorCode: '',
+          twoFACode: '',
           general: 'Email/Username hoặc mật khẩu không đúng.'
         });
-      } else if (errorMessage.includes('2FA') || errorMessage.includes('mã xác thực')) {
+      } else if (errorMessage.includes('2FA') || errorMessage.includes('mã xác thực') || errorMessage.includes('Invalid 2FA')) {
         setErrors({
           identifier: '',
           password: '',
-          twoFactorCode: 'Mã 2FA không đúng hoặc đã hết hạn',
+          twoFACode: 'Mã 2FA không đúng',
           general: ''
         });
       } else if (errorMessage.includes('không có quyền') || errorMessage.includes('Forbidden')) {
         setErrors({
           identifier: '',
           password: '',
-          twoFactorCode: '',
+          twoFACode: '',
           general: 'Bạn không có quyền truy cập trang admin.'
         });
       } else {
         setErrors({
           identifier: '',
           password: '',
-          twoFactorCode: '',
+          twoFACode: '',
           general: errorMessage
         });
       }
@@ -202,9 +203,7 @@ function AdminLoginForm() {
             onChange={handleChange}
             onBlur={handleBlur}
             className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
-              errors.identifier 
-                ? 'border-red-500/50 focus:ring-red-500' 
-                : 'border-emerald-500/30 focus:ring-emerald-500'
+              errors.identifier ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
             }`}
             placeholder="Nhập email hoặc username của bạn"
           />
@@ -218,7 +217,7 @@ function AdminLoginForm() {
           )}
         </div>
 
-        {/* Password với toggle */}
+        {/* Password */}
         <div className="relative">
           <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
             Mật khẩu <span className="text-red-400">*</span>
@@ -233,9 +232,7 @@ function AdminLoginForm() {
               onChange={handleChange}
               onBlur={handleBlur}
               className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all pr-10 ${
-                errors.password 
-                  ? 'border-red-500/50 focus:ring-red-500' 
-                  : 'border-emerald-500/30 focus:ring-emerald-500'
+                errors.password ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
               }`}
               placeholder="Nhập mật khẩu của bạn"
             />
@@ -267,34 +264,35 @@ function AdminLoginForm() {
           )}
         </div>
 
-        {/* 2FA Code - Bắt buộc */}
+        {/* 2FA Code - Optional */}
         <div>
-          <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-300 mb-2">
-            Mã xác thực 2FA (6 số) <span className="text-red-400">*</span>
+          <label htmlFor="twoFACode" className="block text-sm font-medium text-gray-300 mb-2">
+            Mã xác thực 2FA (6 số) <span className="text-gray-500 text-xs">(tùy chọn)</span>
           </label>
           <input
-            id="twoFactorCode"
-            name="twoFactorCode"
+            id="twoFACode"
+            name="twoFACode"
             type="text"
             maxLength={6}
-            value={formData.twoFactorCode}
+            value={formData.twoFACode}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
-              errors.twoFactorCode 
-                ? 'border-red-500/50 focus:ring-red-500' 
-                : 'border-emerald-500/30 focus:ring-emerald-500'
+            className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all text-center tracking-widest ${
+              errors.twoFACode ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
             }`}
-            placeholder="Nhập mã 6 chữ số từ Google Authenticator"
+            placeholder="Nhập nếu tài khoản đã bật 2FA"
           />
-          {errors.twoFactorCode && (
+          {errors.twoFACode && (
             <p className="mt-1 text-sm text-red-400 flex items-center">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              {errors.twoFactorCode}
+              {errors.twoFACode}
             </p>
           )}
+          <p className="mt-1 text-xs text-gray-500">
+            Chỉ cần nhập nếu tài khoản admin của bạn đã bật 2FA
+          </p>
         </div>
 
         {/* Submit Button */}

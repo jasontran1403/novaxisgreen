@@ -6,19 +6,19 @@ function LoginForm() {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     identifier: '',
-    password: ''
+    password: '',
+    twoFACode: ''   // ← thêm trường 2FA
   });
   const [errors, setErrors] = useState({
     identifier: '',
     password: '',
+    twoFACode: '',
     general: ''
   });
   const [loading, setLoading] = useState(false);
-  
-  // State cho toggle show password
   const [showPassword, setShowPassword] = useState(false);
 
-  // Validation functions (giữ nguyên)
+  // Validation
   const validateIdentifier = (identifier) => {
     if (!identifier || identifier.trim() === '') {
       return 'Please enter email or username';
@@ -33,13 +33,32 @@ function LoginForm() {
     return '';
   };
 
+  const validateTwoFACode = (code) => {
+    if (code && code.length > 0) {
+      if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+        return '2FA code must be 6 digits';
+      }
+    }
+    return ''; // optional → không nhập cũng được
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    
+
+    // Chỉ cho phép số ở trường twoFACode
+    if (name === 'twoFACode') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 6);
+      setFormData({
+        ...formData,
+        [name]: numericValue
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+
     setErrors({
       ...errors,
       [name]: '',
@@ -55,6 +74,8 @@ function LoginForm() {
       error = validateIdentifier(value);
     } else if (name === 'password') {
       error = validatePassword(value);
+    } else if (name === 'twoFACode') {
+      error = validateTwoFACode(value);
     }
 
     setErrors({
@@ -65,20 +86,23 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     setErrors({
       identifier: '',
       password: '',
+      twoFACode: '',
       general: ''
     });
 
     const identifierError = validateIdentifier(formData.identifier);
     const passwordError = validatePassword(formData.password);
+    const twoFACodeError = validateTwoFACode(formData.twoFACode);
 
-    if (identifierError || passwordError) {
+    if (identifierError || passwordError || twoFACodeError) {
       setErrors({
         identifier: identifierError,
         password: passwordError,
+        twoFACode: twoFACodeError,
         general: ''
       });
       return;
@@ -86,30 +110,48 @@ function LoginForm() {
 
     setLoading(true);
 
-    const result = await login(formData.identifier, formData.password);
+    // Truyền thêm twoFACode (nếu có) vào hàm login
+    const result = await login(
+      formData.identifier,
+      formData.password,
+      formData.twoFACode || undefined   // chỉ gửi nếu có giá trị
+    );
 
     if (result.success) {
       window.location.href = '/dashboard';
     } else {
       const errorMessage = result.error || 'Login failed';
-      
-      if (errorMessage.toLowerCase().includes('incorrect') || 
-          errorMessage.includes('không đúng')) {
+
+      if (
+        errorMessage.toLowerCase().includes('incorrect') ||
+        errorMessage.toLowerCase().includes('invalid credentials') ||
+        errorMessage.includes('không đúng')
+      ) {
         setErrors({
           identifier: '',
           password: '',
+          twoFACode: '',
           general: 'Email/Username or password is incorrect.'
+        });
+      } else if (errorMessage.toLowerCase().includes('2fa') || errorMessage.toLowerCase().includes('token') || errorMessage.toLowerCase().includes('code')) {
+        setErrors({
+          identifier: '',
+          password: '',
+          twoFACode: 'Invalid 2FA code',
+          general: ''
         });
       } else if (errorMessage.toLowerCase().includes('password')) {
         setErrors({
           identifier: '',
           password: 'Please enter password',
+          twoFACode: '',
           general: ''
         });
       } else {
         setErrors({
           identifier: '',
           password: '',
+          twoFACode: '',
           general: errorMessage
         });
       }
@@ -120,7 +162,7 @@ function LoginForm() {
 
   return (
     <div className="bg-slate-700/50 dark:bg-gray-800/50 rounded-lg border border-emerald-500/50 dark:border-emerald-400/50 p-6 md:p-8 glow-border relative overflow-hidden">
-      {/* Background Pattern (giữ nguyên) */}
+      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-blue-500/20"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -152,9 +194,7 @@ function LoginForm() {
             onChange={handleChange}
             onBlur={handleBlur}
             className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
-              errors.identifier 
-                ? 'border-red-500/50 focus:ring-red-500' 
-                : 'border-emerald-500/30 focus:ring-emerald-500'
+              errors.identifier ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
             }`}
             placeholder="Enter your email or username"
           />
@@ -168,7 +208,7 @@ function LoginForm() {
           )}
         </div>
 
-        {/* Password with Toggle */}
+        {/* Password */}
         <div className="relative">
           <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
             Password <span className="text-red-400">*</span>
@@ -183,26 +223,21 @@ function LoginForm() {
               onChange={handleChange}
               onBlur={handleBlur}
               className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all pr-10 ${
-                errors.password 
-                  ? 'border-red-500/50 focus:ring-red-500' 
-                  : 'border-emerald-500/30 focus:ring-emerald-500'
+                errors.password ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
               }`}
               placeholder="Enter your password"
             />
-            {/* Toggle Icon */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200 focus:outline-none"
             >
               {showPassword ? (
-                // Icon mắt mở (show)
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               ) : (
-                // Icon mắt đóng (hide)
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                 </svg>
@@ -217,6 +252,39 @@ function LoginForm() {
               {errors.password}
             </p>
           )}
+        </div>
+
+        {/* 2FA Code - Optional */}
+        <div>
+          <label htmlFor="twoFACode" className="block text-sm font-medium text-gray-300 mb-2">
+            2FA Code (optional)
+          </label>
+          <input
+            id="twoFACode"
+            name="twoFACode"
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
+            maxLength={6}
+            value={formData.twoFACode}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full px-4 py-3 bg-slate-600/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all text-center tracking-widest ${
+              errors.twoFACode ? 'border-red-500/50 focus:ring-red-500' : 'border-emerald-500/30 focus:ring-emerald-500'
+            }`}
+            placeholder="Enter 6-digit code"
+          />
+          {errors.twoFACode && (
+            <p className="mt-1 text-sm text-red-400 flex items-center">
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.twoFACode}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Only required if 2FA is enabled on your account
+          </p>
         </div>
 
         {/* Submit Button */}

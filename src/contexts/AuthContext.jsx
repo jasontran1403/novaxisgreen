@@ -109,15 +109,23 @@ export const AuthProvider = ({ children }) => {
     };
   }, [navigate]);
 
-  const login = async (identifier, password) => {
+  const login = async (identifier, password, twoFACode) => {
     try {
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-      const loginData = isEmail 
+
+      // Chuẩn bị payload
+      const loginData = isEmail
         ? { email: identifier, password }
         : { username: identifier, password };
-      
+
+      // Nếu có twoFACode (và không rỗng), thêm vào payload
+      if (twoFACode && twoFACode.trim() !== '') {
+        loginData.twoFACode = twoFACode.trim();   // hoặc đổi tên field nếu backend dùng tên khác
+      }
+
+      // Gửi request
       const data = await api.post(API_ENDPOINTS.AUTH.LOGIN, loginData, false);
-      
+
       if (data.success) {
         // Clear impersonate khi login mới
         localStorage.removeItem('impersonate_token');
@@ -127,19 +135,27 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.data.user));
         setUser(data.data.user);
         setIsAuthenticated(true);
+
         return { success: true, data: data.data };
       } else {
-        return { success: false, error: data.error || data.message };
+        return { success: false, error: data.error || data.message || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Login error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          'An error occurred during login'
+      };
     }
   };
 
   const register = async (userData) => {
     try {
       const data = await api.post(API_ENDPOINTS.AUTH.REGISTER, userData, false);
-      
+
       if (data.success) {
         localStorage.removeItem('impersonate_token');
         localStorage.removeItem('impersonate_user');
