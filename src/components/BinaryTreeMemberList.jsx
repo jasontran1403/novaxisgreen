@@ -51,18 +51,13 @@ function BinaryTreeMemberList() {
         setLoading(true);
         setError('');
         
-        console.log('[FETCH_MEMBERS] Fetching F1 members...');
-        
         // Get F1 by sponsor của current user
         const response = await api.get(API_ENDPOINTS.USER.F1_MEMBERS);
-        
-        console.log('[FETCH_MEMBERS] Response:', response);
         
         if (response.success) {
           // Data đã đúng format từ backend, không cần map lại
           const data = response.data || [];
           
-          console.log('[FETCH_MEMBERS] Loaded', data.length, 'members');
           setLeftRef(response.leftRef);
           setRightRef(response.rightRef);
           setMembers(data);
@@ -70,7 +65,6 @@ function BinaryTreeMemberList() {
           setError(response.error || 'Cannot load member list');
         }
       } catch (err) {
-        console.error('[FETCH_MEMBERS] Error:', err);
         setError(err.message || 'Error loading member list');
       } finally {
         setLoading(false);

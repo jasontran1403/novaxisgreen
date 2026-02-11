@@ -32,8 +32,6 @@ export const BinaryTreeProvider = ({ children }) => {
         params.userId = userId;
       }
       
-      console.log('[BINARY_TREE_CONTEXT] Fetching tree with params:', params);
-      
       const response = await api.get(API_ENDPOINTS.USER.BINARY_TREE, {
         params
       });
@@ -43,7 +41,6 @@ export const BinaryTreeProvider = ({ children }) => {
         // API trả về: { root: { id, username, fullName, leftChild, rightChild, ... } }
         setTreeData(response.data.root);
         setMaxDepth(depthToUse);
-        console.log('[BINARY_TREE_CONTEXT] Tree loaded successfully');
       } else {
         // Check if error due to size, retry with smaller depth
         if (response.error?.includes('quá lớn') || response.error?.includes('serialize')) {
@@ -55,8 +52,6 @@ export const BinaryTreeProvider = ({ children }) => {
         setError(response.error || 'Không thể tải dữ liệu cây nhị phân');
       }
     } catch (err) {
-      console.error('[BINARY_TREE_CONTEXT] Error:', err);
-      
       // Check if error due to size
       if (err.response?.status === 413 || err.message?.includes('serialize') || err.message?.includes('quá lớn')) {
         const currentDepth = customMaxDepth !== null ? customMaxDepth : maxDepth;

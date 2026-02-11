@@ -10,7 +10,7 @@ export const API_ENDPOINTS = {
     ADMIN_LOGIN: '/api/auth/admin-login',
     REGISTER: '/api/auth/register',
     ME: '/api/auth/me',
-    LOGOUT: '/api/auth/logout',    
+    LOGOUT: '/api/auth/logout',
   },
 
   // Reflink - NEW ENDPOINTS
@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
     STATISTIC: '/api/user/statistic',
     MY_REFLINKS: '/api/user/my-reflinks',
     BINARY_TREE: '/api/user/binary-tree',
+    BINARY_TREE_DETAIL: '/api/user/binary-tree-detail',
     MEMBER_LIST: '/api/user/member-list',
     F1_MEMBERS: '/api/user/f1-members',
     F1_MEMBERS_BY_ID: (userId) => `/api/user/f1-members/${userId}`,
@@ -49,7 +50,7 @@ export const API_ENDPOINTS = {
     DEPOSIT: '/api/user/deposit',
     WITHDRAW: '/api/user/withdraw',
     TRANSFER: '/api/user/transfer',
-    VALIDATE_USERNAME: (username) =>  `/api/user/validate/${username}`,
+    VALIDATE_USERNAME: (username) => `/api/user/validate/${username}`,
     VALIDATE_WALLET_ADDRESS: (walletAddress) => `/api/user/validate-address/${walletAddress}`,
     CREATE_DEPOSIT: "/api/user/create-deposit",
     GET_DAILY_INTEREST: "/api/user/daily-interest",

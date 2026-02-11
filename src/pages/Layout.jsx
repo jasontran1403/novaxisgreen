@@ -25,34 +25,23 @@ const Layout = ({ children }) => {
     const checkPasswordStatus = async () => {
       // ✅ Skip if impersonating
       if (isImpersonated()) {
-        console.log('[Layout] Impersonating - Skip password check');
         setCheckingPassword(false);
         return;
       }
 
       try {
         setCheckingPassword(true);
-        console.log('[Layout] Checking password status...');
-
         const response = await api.get(API_ENDPOINTS.USER.PASSWORD_STATUS);
 
         if (response.success) {
           const passwordChanged = response.data; // true/false
           const needsPasswordChange = !passwordChanged;
-
-          console.log('[Layout] passwordChanged:', passwordChanged);
-          console.log('[Layout] needsPasswordChange:', needsPasswordChange);
-
           if (needsPasswordChange) {
-            console.log('[Layout] ✅ Password change REQUIRED - Showing modal');
             setShowPasswordModal(true);
-          } else {
-            console.log('[Layout] ❌ Password already changed - No modal');
           }
         }
       } catch (err) {
         console.error('[Layout] Error checking password status:', err);
-        // Fail safely - don't show modal on error
       } finally {
         setCheckingPassword(false);
       }
@@ -76,9 +65,6 @@ const Layout = ({ children }) => {
 
   // ✅ Handle modal close - block if required
   const handleModalClose = () => {
-    console.log('[Layout] Attempted to close modal - BLOCKED');
-    // Don't allow closing modal if password change is required
-    // Modal will only close after successful password change
   };
   
   return (

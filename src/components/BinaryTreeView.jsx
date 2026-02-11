@@ -13,6 +13,7 @@ import 'reactflow/dist/style.css';
 import { API_ENDPOINTS } from '../config/apiConfig';
 import api from '../services/api';
 import { createTempReflink } from '../services/reflinkService';
+import { ChevronLeft, X } from 'lucide-react';
 
 // Toast Component (giữ nguyên)
 const Toast = ({ message, type = 'success', isVisible, onClose }) => {
@@ -59,6 +60,13 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [toast, setToast] = useState({ message: '', type: 'success', isVisible: false });
+
+  // ── States for node click & change root ──
+  const [currentRoot, setCurrentRoot] = useState(originalTreeData);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [nodeDetail, setNodeDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
 
   const searchTimeoutRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -107,17 +115,96 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     }
   };
 
+  // Fetch user detail (fallback to node data if no separate endpoint)
+  const fetchUserDetail = async (userId) => {
+    if (!userId) {
+      setDetailError('No user ID provided');
+      setDetailLoading(false);
+      return;
+    }
+
+    setDetailLoading(true);
+    setDetailError('');
+    setNodeDetail(null);
+
+    try {
+      const res = await api.get(API_ENDPOINTS.USER.BINARY_TREE_DETAIL, {
+        params: { userId },
+      });
+
+      if (res) {
+        console.log("Res ", res);
+        setNodeDetail(res);
+        console.log("Node Detail ", res);
+      }
+    } catch (err) {
+      setNodeDetail(selectedNode);
+      setDetailError('Could not load full details, showing basic info');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleNodeClick = (nodeData) => {
+    if (!nodeData?.userId && !nodeData?.memberCode) return;
+    setSelectedNode(nodeData);
+    fetchUserDetail(nodeData.userId, nodeData.memberCode || nodeData.username);
+  };
+
+  const goToThisNode = () => {
+    if (!selectedNode?.memberCode && !selectedNode?.username) return;
+
+    const targetUsername = selectedNode.memberCode || selectedNode.username;
+
+    setSearchTerm('');
+    setSearchTreeData(null);
+    setCurrentRoot(null);
+    setDetailLoading(true);
+
+    api
+      .get(API_ENDPOINTS.USER.BINARY_TREE, {
+        params: { username: targetUsername },
+      })
+      .then((res) => {
+        if (res.success && res.data?.root) {
+          setCurrentRoot(res.data.root);
+          showToast(`Switched to tree of ${targetUsername}`, 'success');
+        } else {
+          showToast(res.message || 'Failed to load new tree', 'error');
+        }
+      })
+      .catch((err) => {
+        showToast('Error switching tree', 'error');
+        console.error(err);
+      })
+      .finally(() => {
+        setDetailLoading(false);
+        setSelectedNode(null);
+      });
+  };
+
+  const goBackToOriginalRoot = () => {
+    setCurrentRoot(originalTreeData);
+    setSearchTerm('');
+    setSearchTreeData(null);
+    showToast('Returned to original root', 'success');
+    setSelectedNode(null);
+  };
+
   const MemberNode = ({ data }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     return (
-      <div className={`
-        ${isMobile ? 'w-16 h-16' : 'w-20 h-20'} rounded-full border-2 flex items-center justify-center
-        ${data.isCurrentUser
-          ? 'border-emerald-400 bg-emerald-500/20'
-          : 'border-emerald-500/50 bg-slate-600/50'
-        }
-        hover:border-emerald-400 transition-all
-      `}>
+      <div
+        className={`
+          ${isMobile ? 'w-16 h-16' : 'w-20 h-20'} rounded-full border-2 flex items-center justify-center
+          ${data.isCurrentUser
+            ? 'border-emerald-400 bg-emerald-500/20'
+            : 'border-emerald-500/50 bg-slate-600/50'
+          }
+          hover:border-emerald-400 transition-all cursor-pointer
+        `}
+        onClick={() => handleNodeClick(data)}
+      >
         <Handle type="target" position={Position.Top} className="w-1 h-1 bg-emerald-500/50" />
         <div className="text-center px-1">
           <div className={`${isMobile ? 'text-[9px]' : 'text-[10px]'} font-semibold text-emerald-300 leading-tight`}>
@@ -204,11 +291,9 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
 
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const VERTICAL_SPACING = isMobile ? 120 : 160;
-    
-    // Khoảng cách ngang giữa parent và child ở mỗi level (giảm dần theo level)
+
     const getHorizontalSpacing = (level) => {
-      const baseSpacing = isMobile ? 320 : 400; // Tăng thêm để tránh chồng khi cây đầy đủ
-      // Giảm 20% mỗi level để các node dưới vẫn cách xa
+      const baseSpacing = isMobile ? 320 : 400;
       return baseSpacing * Math.pow(0.8, level);
     };
 
@@ -218,7 +303,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
       const id = node ? `node-${nodeId++}` : `empty-${nodeId++}`;
       const yPos = level * VERTICAL_SPACING;
 
-      // Tính vị trí X: parent ở giữa, con trái/phải cách đều nhau
       let xPos = parentX;
       if (level > 0) {
         const spacing = getHorizontalSpacing(level - 1);
@@ -233,6 +317,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
           data: {
             userId: node.id,
             memberCode: node.username,
+            username: node.username,
             name: node.fullName,
             sponsorName: node.sponsorName,
             isCurrentUser: node.isCurrentUser,
@@ -241,7 +326,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
 
         const currentParentInfo = { id: node.id, username: node.username };
 
-        // Đệ quy vẽ cây con trái và phải với spacing đều nhau
         traverse(node.leftChild, id, 'left', currentParentInfo, level + 1, xPos);
         traverse(node.rightChild, id, 'right', currentParentInfo, level + 1, xPos);
       } else {
@@ -298,20 +382,33 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
 
         const res = await api.get(API_ENDPOINTS.USER.BINARY_TREE, {
           params: { username: trimmed },
-          signal: abortControllerRef.current.signal
+          signal: abortControllerRef.current.signal,
         });
 
         if (res.success && res.data?.root) {
           setSearchTreeData(res.data.root);
-          setSearchError('');
-        } else {
-          setSearchTreeData(null);
-          setSearchError(res.message || 'Member not found');
+          setSearchError("");
+          showToast("Member found! ✓", "success");
+          return;
         }
       } catch (err) {
-        if (err.name === 'AbortError') return;
         setSearchTreeData(null);
-        setSearchError('Failed to search');
+
+        if (err) {
+          const message = err.message;
+          console.log(err);
+
+          if (message.toLowerCase().includes("not found")) {
+            showToast("This member doesn't exist!", "error");
+            setSearchError("This member doesn't exist!");
+          } else {
+            showToast(
+              message || "Error occurred, please try again",
+              "error"
+            );
+            setSearchError("Error searching member");
+          }
+        }
       } finally {
         setSearchLoading(false);
       }
@@ -324,8 +421,9 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
   }, [searchTerm]);
 
   const displayTreeData = useMemo(() => {
-    return searchTerm.trim() && searchTreeData ? searchTreeData : originalTreeData;
-  }, [searchTerm, searchTreeData, originalTreeData]);
+    if (searchTerm.trim() && searchTreeData) return searchTreeData;
+    return currentRoot || originalTreeData;
+  }, [searchTerm, searchTreeData, currentRoot, originalTreeData]);
 
   const initialNodesAndEdges = useMemo(() => {
     if (!displayTreeData) return { nodes: [], edges: [] };
@@ -342,7 +440,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     if (reactFlowInstance.current) {
       setTimeout(() => {
         reactFlowInstance.current.fitView({ padding: 0.1, duration: 300 });
-        // Zoom thêm 10%
         setTimeout(() => {
           const currentZoom = reactFlowInstance.current.getZoom();
           reactFlowInstance.current.zoomTo(currentZoom * 1.1, { duration: 200 });
@@ -355,7 +452,6 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     reactFlowInstance.current = instance;
     setTimeout(() => {
       instance.fitView({ padding: 0.1, duration: 300 });
-      // Zoom thêm 10%
       setTimeout(() => {
         const currentZoom = instance.getZoom();
         instance.zoomTo(currentZoom * 1.1, { duration: 200 });
@@ -367,10 +463,107 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
     <>
       <Toast {...toast} onClose={hideToast} />
 
+      {/* Modal */}
+      {selectedNode && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedNode(null)}
+        >
+          <div
+            className="bg-slate-900 border border-emerald-600/40 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-slate-900 border-b border-emerald-800/50 p-5 flex items-center justify-between z-10">
+              <h3 className="text-xl font-bold text-emerald-400">
+                {nodeDetail && nodeDetail.username}
+              </h3>
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="text-emerald-400 hover:text-emerald-200 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {detailLoading ? (
+                <div className="flex flex-col items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-500 border-opacity-50"></div>
+                  <p className="mt-6 text-emerald-300">Loading member info...</p>
+                </div>
+              ) : detailError ? (
+                <div className="text-red-400 text-center py-8 font-medium">{detailError}</div>
+              ) : nodeDetail ? (
+                <div className="grid grid-cols-1 gap-4 text-gray-200 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">User Rank:</span>
+                    <span>{nodeDetail.user_rank || "MEMBER"}</span>           {/* ← sửa userRank → user_rank */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">Leader Rank:</span>
+                    <span>{nodeDetail.user_leader_rank || "VIP 0"}</span>     {/* ← userLeaderRank → user_leader_rank */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">Personal Sales:</span>
+                    <span>{nodeDetail.personal_sales?.toLocaleString() || 0} USD</span>   {/* ← personalSales → personal_sales */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">Left Team Sales:</span>
+                    <span>{nodeDetail.team_sales_left?.toLocaleString() || 0} USD</span>  {/* ← teamSalesLeft → team_sales_left */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">Right Team Sales:</span>
+                    <span>{nodeDetail.team_sales_right?.toLocaleString() || 0} USD</span> {/* ← teamSalesRight → team_sales_right */}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-emerald-400 font-medium">Total Direct Sales:</span>
+                    <span>{nodeDetail.total_direct_sales?.toLocaleString() || 0} USD</span> {/* ← totalDirectSales → total_direct_sales */}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-yellow-300 text-center py-8">No detailed information available</div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-slate-900 border-t border-emerald-800/50 p-5 flex gap-4">
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors font-medium"
+              >
+                Close
+              </button>
+
+              {selectedNode?.username &&
+                selectedNode.username !== (currentRoot?.username || originalTreeData?.username) && (
+                  <button
+                    onClick={goToThisNode}
+                    disabled={detailLoading}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {detailLoading ? 'Switching...' : 'View this member\'s tree'}
+                  </button>
+                )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-slate-700/50 rounded-lg border border-emerald-500/50 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h2 className="text-xl font-semibold text-emerald-400">Binary Tree</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold text-emerald-400">Binary Tree</h2>
+
+            {currentRoot?.username !== originalTreeData?.username && (
+              <button
+                onClick={goBackToOriginalRoot}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg border border-emerald-600/40 transition-all text-sm font-medium"
+              >
+                <ChevronLeft size={18} />
+                Back to Root ({originalTreeData?.username || 'Root'})
+              </button>
+            )}
+          </div>
 
           <div className="relative w-full sm:w-80">
             <input

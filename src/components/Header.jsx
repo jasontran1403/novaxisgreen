@@ -26,7 +26,6 @@ const Header = ({ userName = 'User' }) => {
   // Initialize and update theme
   useEffect(() => {
     const root = document.documentElement;
-    console.log('Theme changed to:', isDark ? 'dark' : 'light');
     if (isDark) {
       root.classList.add('dark');
       localStorage.setItem('theme', 'dark');
