@@ -58,14 +58,14 @@ function PlanCard({ plan, loading, income24h = 0, onRefresh }) {
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs text-emerald-400 dark:text-emerald-300">Team Sales Left</p>
+          <p className="text-xs text-emerald-400 dark:text-emerald-300">Left Team Sales</p>
           <p className="text-lg font-bold text-white">
             {loading ? '...' : `${plan.leftSales.toLocaleString()} ${plan.currency}`}
           </p>
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs text-emerald-400 dark:text-emerald-300">Team Sales Right</p>
+          <p className="text-xs text-emerald-400 dark:text-emerald-300">Right Team Sales</p>
           <p className="text-lg font-bold text-white">
             {loading ? '...' : `${plan.rightSales.toLocaleString()} ${plan.currency}`}
           </p>
