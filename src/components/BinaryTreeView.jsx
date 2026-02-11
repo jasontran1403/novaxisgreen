@@ -626,7 +626,7 @@ function BinaryTreeViewInner({ treeData: originalTreeData = null, onLoadFullTree
               onInit={onInit}
               fitView
               minZoom={0.4}
-              maxZoom={1}
+              maxZoom={1.5}
               zoomOnScroll={true}
               zoomOnPinch={true}
               panOnScroll={true}
