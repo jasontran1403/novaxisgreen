@@ -26,10 +26,10 @@ function Invest() {
 
   // HARDCODED TERMS
   const INVESTMENT_TERMS = [
-    { months: 6, days: 180, dailyRate: 0.2 },
-    { months: 12, days: 360, dailyRate: 0.33 },
+    { months: 24, days: 720, dailyRate: 0.5 },
     { months: 18, days: 540, dailyRate: 0.4 },
-    { months: 24, days: 720, dailyRate: 0.5 }
+    { months: 12, days: 360, dailyRate: 0.33 },
+    { months: 6, days: 180, dailyRate: 0.2 },
   ];
 
   const colorByName = {
