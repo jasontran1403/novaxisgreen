@@ -18,7 +18,7 @@ function Invest() {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPagination, setHistoryPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [selectedModalTermMonths, setSelectedModalTermMonths] = useState(6);
+  const [selectedModalTermMonths, setSelectedModalTermMonths] = useState(24);
   const [selectedCurrency, setSelectedCurrency] = useState('USDT');
   const [showModal, setShowModal] = useState(false);
   const [investing, setInvesting] = useState(false);
@@ -46,7 +46,7 @@ function Invest() {
 
   const handleInvestClick = (pkg) => {
     setSelectedPackage(pkg);
-    setSelectedModalTermMonths(6);
+    setSelectedModalTermMonths(24);
     setSelectedCurrency('USDT');
     setShowModal(true);
   };
