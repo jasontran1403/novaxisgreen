@@ -945,7 +945,7 @@ function UpdateBalanceModal({ member, onClose, onSave }) {
   const [balanceData, setBalanceData] = useState({
     tokenSymbol: 'USDT',
     amount: '',
-    operation: 'add',
+    operation: 'set',
     reason: ''
   });
 
@@ -993,8 +993,6 @@ function UpdateBalanceModal({ member, onClose, onSave }) {
               onChange={(e) => setBalanceData(prev => ({ ...prev, operation: e.target.value }))}
               className="w-full px-3 py-2 bg-slate-700 border border-emerald-500/30 rounded text-white"
             >
-              <option value="add">Thêm vào (+)</option>
-              <option value="subtract">Trừ đi (-)</option>
               <option value="set">Đặt giá trị (=)</option>
             </select>
           </div>
