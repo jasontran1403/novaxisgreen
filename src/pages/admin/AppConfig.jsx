@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 const BASE_URL = "https://app.novaxisgreen.com/api/v1";
 // const BASE_URL = "http://localhost:9191/api/v1";
 
-
 const apiFetch = async (path, options = {}) => {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -31,16 +30,16 @@ const Ico = ({ d, size = 16, className = "" }) => (
   </svg>
 );
 const IC = {
-  cfg: "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
-  users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
-  money: "M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
-  clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-  eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z",
+  cfg:    "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
+  users:  "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
+  money:  "M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
+  clock:  "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+  eye:    "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z",
   eyeOff: "M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22",
-  copy: "M8 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2v-2M8 4a2 2 0 012-2h4a2 2 0 012 2v2a2 2 0 01-2 2h-4a2 2 0 01-2-2V4z",
-  check: "M20 6L9 17l-5-5",
+  copy:   "M8 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2v-2M8 4a2 2 0 012-2h4a2 2 0 012 2v2a2 2 0 01-2 2h-4a2 2 0 01-2-2V4z",
+  check:  "M20 6L9 17l-5-5",
   search: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
-  ok: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+  ok:     "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
   reload: "M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15",
 };
 
@@ -108,7 +107,7 @@ const SearchBar = ({ value, onChange }) => (
     <input type="text" value={value} onChange={e => onChange(e.target.value)}
       placeholder="Tìm kiếm theo wallet address..."
       className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-9 py-2.5 text-sm text-white
-        placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-600/50 transition-colors"/>
+        placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-600/50 transition-colors" />
     {value && <button onClick={() => onChange("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-300 text-lg leading-none">×</button>}
   </div>
 );
@@ -145,6 +144,47 @@ const ApproveOverlay = ({ id, label }) => (
   </div>
 );
 
+const ConfirmDialog = ({ item, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl max-w-sm w-full space-y-4">
+      <div className="space-y-1">
+        <p className="text-white font-semibold text-base">Xác nhận Approve</p>
+        <p className="text-slate-400 text-sm">Bạn có chắc muốn approve lệnh này không?</p>
+      </div>
+      <div className="bg-slate-800/60 rounded-xl p-3.5 space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-slate-500">ID</span>
+          <span className="font-mono text-slate-300">#{item.id}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">Loại</span>
+          {item._kind === "capital"
+            ? <span className="text-blue-300 font-semibold">Capital</span>
+            : <span className="text-purple-300 font-semibold">Reward</span>}
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">Wallet</span>
+          <span className="font-mono text-xs text-slate-300">{short(item.walletAddress)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">Số tiền</span>
+          <span className="font-mono font-semibold text-white">{fmt(item.amount)} {item.currency}</span>
+        </div>
+      </div>
+      <div className="flex gap-3 pt-1">
+        <button onClick={onCancel}
+          className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-medium rounded-xl transition-colors">
+          Hủy
+        </button>
+        <button onClick={onConfirm}
+          className="flex-1 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
+          Xác nhận Approve
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const TH = ({ children, right, center }) => (
   <th className={`px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider
     ${right ? "text-right" : center ? "text-center" : "text-left"}`}>{children}</th>
@@ -152,6 +192,16 @@ const TH = ({ children, right, center }) => (
 const TD = ({ children, right, center, mono }) => (
   <td className={`px-4 py-3.5 ${right ? "text-right" : center ? "text-center" : "text-left"} ${mono ? "font-mono text-xs" : ""}`}>{children}</td>
 );
+
+const sBadge = (s) => {
+  const m = {
+    PENDING:   "bg-amber-900/50 text-amber-300 border-amber-500/30",
+    COMPLETED: "bg-emerald-900/50 text-emerald-300 border-emerald-500/30",
+    FAILED:    "bg-red-900/50 text-red-300 border-red-500/30",
+  };
+  const l = { PENDING: "Pending", COMPLETED: "Completed", FAILED: "Failed" };
+  return <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border ${m[s] || "bg-slate-800 text-slate-500 border-slate-700"}`}>{l[s] || s}</span>;
+};
 
 // ─── Tab 1: Config ─────────────────────────────────────────────────────────────
 function ConfigTab() {
@@ -171,8 +221,8 @@ function ConfigTab() {
   const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
   const copy = (v, k) => { navigator.clipboard.writeText(v); setCopied(k); setTimeout(() => setCopied(""), 2000); };
 
-  const vAddr = v => !v || /^0x[a-fA-F0-9]{40}$/.test(v);
-  const vKey = v => !v || /^(0x)?[a-fA-F0-9]{64}$/.test(v);
+  const vAddr  = v => !v || /^0x[a-fA-F0-9]{40}$/.test(v);
+  const vKey   = v => !v || /^(0x)?[a-fA-F0-9]{64}$/.test(v);
   const vPrice = v => !v || (parseFloat(v) > 0 && !isNaN(parseFloat(v)));
   const hasErr = !vAddr(f.bscWallet) || !vAddr(f.ethWallet) || !vKey(f.bscPrivateKey) || !vKey(f.ethPrivateKey) || !vPrice(f.novaPrice);
 
@@ -209,22 +259,18 @@ function ConfigTab() {
   return (
     <form onSubmit={submit} className="space-y-5">
       {msg && <Toast type={msg.type} msg={msg.msg} onClose={() => setMsg(null)} />}
-
-      {/* Nova price */}
       <div className="rounded-xl border border-slate-700/50 bg-slate-900/30 p-5 space-y-2">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Giá NOVA (USD)</p>
         <div className="relative max-w-xs">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-sm">$</span>
           <input type="number" step="0.0001" min="0" value={f.novaPrice} onChange={set("novaPrice")} placeholder="0.1000"
             className="w-full pl-7 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white
-              focus:outline-none focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-600/50 transition-colors"/>
+              focus:outline-none focus:ring-1 focus:ring-emerald-500/30 focus:border-emerald-600/50 transition-colors" />
         </div>
         {!vPrice(f.novaPrice) && f.novaPrice && <p className="text-xs text-red-400">Giá phải lớn hơn 0</p>}
       </div>
-
       <WBlock title="BSC / BNB Chain" accent="border-amber-500/15 bg-amber-950/10" wk="bscWallet" pk="bscPrivateKey" />
       <WBlock title="Ethereum" accent="border-blue-500/15 bg-blue-950/10" wk="ethWallet" pk="ethPrivateKey" />
-
       <div className="flex justify-end pt-1">
         <button type="submit" disabled={saving || hasErr}
           className="flex items-center gap-2 px-6 py-2.5 bg-emerald-700 hover:bg-emerald-600
@@ -272,7 +318,6 @@ function UsersTab() {
         <div className="flex-1"><SearchBar value={q} onChange={setQ} /></div>
         <ReloadBtn onClick={load} disabled={loading} />
       </div>
-
       {loading ? (
         <div className="flex items-center gap-2 text-slate-500 py-12"><Spin /><span className="text-sm">Đang tải...</span></div>
       ) : filtered.length === 0 ? (
@@ -291,29 +336,21 @@ function UsersTab() {
               <tbody className="divide-y divide-slate-800/50">
                 {filtered.map(u => (
                   <tr key={u.walletAddress} className="hover:bg-slate-800/20 transition-colors">
-                    <TD mono className="whitespace-nowrap">{u.walletAddress}</TD>
+                    <TD mono>{u.walletAddress}</TD>
                     <TD>
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border
-                ${u.role === "MEMBER"
-                          ? "bg-emerald-900/50 text-emerald-300 border-emerald-500/30"
-                          : "bg-slate-800 text-slate-500 border-slate-700/50"}`}>
+                        ${u.role === "MEMBER" ? "bg-emerald-900/50 text-emerald-300 border-emerald-500/30" : "bg-slate-800 text-slate-500 border-slate-700/50"}`}>
                         {u.role}
                       </span>
                     </TD>
                     <TD right>
-                      <button
-                        onClick={() => toggle(u.walletAddress, u.role)}
-                        disabled={toggling === u.walletAddress}
+                      <button onClick={() => toggle(u.walletAddress, u.role)} disabled={toggling === u.walletAddress}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
-                  ${u.role === "MEMBER"
+                          ${u.role === "MEMBER"
                             ? "bg-slate-800 hover:bg-red-900/30 border-slate-700 hover:border-red-500/40 text-slate-400 hover:text-red-300"
                             : "bg-emerald-900/30 hover:bg-emerald-900/50 border-emerald-500/30 text-emerald-400"}
-                  disabled:opacity-40 disabled:cursor-not-allowed`}>
-                        {toggling === u.walletAddress
-                          ? <><Spin size={11} />Đang cập nhật</>
-                          : u.role === "MEMBER"
-                            ? "→ USER"
-                            : "→ MEMBER"}
+                          disabled:opacity-40 disabled:cursor-not-allowed`}>
+                        {toggling === u.walletAddress ? <><Spin size={11} />Đang cập nhật</> : u.role === "MEMBER" ? "→ USER" : "→ MEMBER"}
                       </button>
                     </TD>
                   </tr>
@@ -321,11 +358,8 @@ function UsersTab() {
               </tbody>
             </table>
           </div>
-
           <div className="px-4 py-2.5 border-t border-slate-800/50 bg-slate-900/40">
-            <span className="text-xs text-slate-600">
-              {filtered.length} / {all.length} users
-            </span>
+            <span className="text-xs text-slate-600">{filtered.length} / {all.length} users</span>
           </div>
         </div>
       )}
@@ -333,52 +367,68 @@ function UsersTab() {
   );
 }
 
-// ─── Tab 3: Withdraw History ───────────────────────────────────────────────────
+// ─── Tab 3: Withdraw — Capital + Reward gộp chung ──────────────────────────────
 function WithdrawTab() {
-  const [all, setAll] = useState([]);
-  const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(null);
-  const [msg, setMsg] = useState(null);
+  const [capitals, setCapitals]   = useState([]); // WithdrawHistory
+  const [rewards,  setRewards]    = useState([]); // ClaimHistory type=PERSONAL
+  const [q, setQ]                 = useState("");
+  const [loading, setLoading]     = useState(true);
+  const [approving, setApproving] = useState(null); // {id, kind} — đang xử lý
+  const [confirm,  setConfirm]    = useState(null); // item cần xác nhận
+  const [msg, setMsg]             = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setAll(await api.get("/withdraw-history")); }
-    catch { setMsg({ type: "error", msg: "Không thể tải lịch sử withdraw" }); }
+    try {
+      const [cap, all] = await Promise.all([
+        api.get("/withdraw-history"),
+        api.get("/claim-history"),
+      ]);
+      setCapitals(cap || []);
+      setRewards((all || []).filter(c => c.type === "PERSONAL"));
+    } catch { setMsg({ type: "error", msg: "Không thể tải lịch sử withdraw" }); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = all.filter(w => !q || w.walletAddress?.toLowerCase().includes(q.toLowerCase()));
+  const merged = [
+    ...capitals.map(w => ({ ...w, _kind: "capital" })),
+    ...rewards.map(c  => ({ ...c, _kind: "reward"  })),
+  ].sort((a, b) => (b.timeCreate || 0) - (a.timeCreate || 0));
 
-  const approve = async (item) => {
+  const filtered = merged.filter(r => !q || r.walletAddress?.toLowerCase().includes(q.toLowerCase()));
+
+  // Bước 1: click Approve → mở confirm dialog
+  const requestApprove = (item) => {
     if (approving) return;
-    setApproving(item.id); setMsg(null);
+    setConfirm(item);
+  };
+
+  // Bước 2: user xác nhận → thực sự gọi API
+  const doApprove = async () => {
+    const item = confirm;
+    setConfirm(null);
+    if (!item) return;
+    setApproving({ id: item.id, kind: item._kind }); setMsg(null);
     try {
-      await api.post("/stake/approve-withdraw", { withdrawId: item.id });
-      setAll(p => p.map(w => w.id === item.id ? { ...w, status: "COMPLETED" } : w));
-      setMsg({ type: "success", msg: `Đã approve lệnh #${item.id} thành công!` });
+      if (item._kind === "capital") {
+        await api.post("/approve-withdraw", { withdrawId: item.id });
+        setCapitals(p => p.map(w => w.id === item.id ? { ...w, status: "COMPLETED" } : w));
+        setMsg({ type: "success", msg: `Đã approve Capital #${item.id} thành công!` });
+      } else {
+        await api.post("/approve-claim", { claimId: item.id });
+        setRewards(p => p.map(c => c.id === item.id ? { ...c, status: "COMPLETED" } : c));
+        setMsg({ type: "success", msg: `Đã approve Reward #${item.id} thành công!` });
+      }
     } catch (err) { setMsg({ type: "error", msg: `Approve thất bại: ${err.message}` }); }
     finally { setApproving(null); }
   };
 
-  const sBadge = (s) => {
-    const m = {
-      PENDING: "bg-amber-900/50 text-amber-300 border-amber-500/30",
-      COMPLETED: "bg-emerald-900/50 text-emerald-300 border-emerald-500/30",
-      FAILED: "bg-red-900/50 text-red-300 border-red-500/30",
-    };
-    const label = s === "PENDING" ? "Pending" : s === "COMPLETED" ? "Completed" : "Failed";
-    return <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border ${m[s] || "bg-slate-800 text-slate-500 border-slate-700"}`}>{label}</span>;
-  };
-
-  // Withdraw history: loại là Capital (từ gói stake) — không có reward ở đây vì reward là ClaimHistory
-  // type field không tồn tại trên WithdrawHistory, nên cố định là "Capital"
-
   return (
     <div className="space-y-4">
-      {approving && <ApproveOverlay id={approving} label="lệnh withdraw" />}
+      {confirm   && <ConfirmDialog item={confirm} onConfirm={doApprove} onCancel={() => setConfirm(null)} />}
+      {approving && <ApproveOverlay id={approving.id} label={approving.kind === "capital" ? "Capital withdraw" : "Reward withdraw"} />}
       {msg && <Toast type={msg.type} msg={msg.msg} onClose={() => setMsg(null)} />}
 
       <div className="flex gap-3">
@@ -386,10 +436,11 @@ function WithdrawTab() {
         <ReloadBtn onClick={load} disabled={loading || !!approving} />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Tổng lệnh" value={all.length} color="text-slate-300" />
-        <StatCard label="Pending" value={all.filter(w => w.status === "PENDING").length} color="text-amber-300" />
-        <StatCard label="Completed" value={all.filter(w => w.status === "COMPLETED").length} color="text-emerald-300" />
+      <div className="grid grid-cols-4 gap-3">
+        <StatCard label="Tổng"    value={merged.length}                                 color="text-slate-300" />
+        <StatCard label="Capital" value={capitals.length}                               color="text-blue-300" />
+        <StatCard label="Reward"  value={rewards.length}                                color="text-purple-300" />
+        <StatCard label="Pending" value={merged.filter(r => r.status === "PENDING").length} color="text-amber-300" />
       </div>
 
       {loading ? (
@@ -413,35 +464,32 @@ function WithdrawTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {filtered.map(w => (
-                  <tr key={w.id} className={`transition-colors ${w.status === "PENDING" ? "hover:bg-amber-950/10" : "hover:bg-slate-800/15"}`}>
-                    <TD><span className="text-xs text-slate-600 font-mono">#{w.id}</span></TD>
+                {filtered.map(r => (
+                  <tr key={`${r._kind}-${r.id}`} className={`transition-colors ${r.status === "PENDING" ? "hover:bg-amber-950/10" : "hover:bg-slate-800/15"}`}>
+                    <TD><span className="text-xs text-slate-600 font-mono">#{r.id}</span></TD>
                     <TD>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-slate-300">{short(w.walletAddress)}</span>
-                        <button onClick={() => navigator.clipboard.writeText(w.walletAddress)} title={w.walletAddress}
+                        <span className="font-mono text-xs text-slate-300">{short(r.walletAddress)}</span>
+                        <button onClick={() => navigator.clipboard.writeText(r.walletAddress)} title={r.walletAddress}
                           className="text-slate-700 hover:text-slate-400 transition-colors shrink-0">
                           <Ico d={IC.copy} size={11} />
                         </button>
                       </div>
                     </TD>
-                    <TD right>
-                      <span className="font-mono font-semibold text-white">{fmt(w.amount)}</span>
-                    </TD>
+                    <TD right><span className="font-mono font-semibold text-white">{fmt(r.amount)}</span></TD>
+                    <TD center><span className="text-xs font-bold text-slate-400">{r.currency}</span></TD>
                     <TD center>
-                      <span className="text-xs font-bold text-slate-400">{w.currency}</span>
+                      {r._kind === "capital"
+                        ? <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold border bg-blue-900/40 text-blue-300 border-blue-500/30">Capital</span>
+                        : <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold border bg-purple-900/40 text-purple-300 border-purple-500/30">Reward</span>}
                     </TD>
-                    <TD center>
-                      {/* WithdrawHistory = Capital withdraw */}
-                      <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold border bg-blue-900/40 text-blue-300 border-blue-500/30">
-                        Capital
-                      </span>
-                    </TD>
-                    <TD center>{sBadge(w.status)}</TD>
-                    <TD center><span className="text-xs text-slate-500">{fmtD(w.timeCreate)}</span></TD>
+                    <TD center>{sBadge(r.status)}</TD>
+                    <TD center><span className="text-xs text-slate-500">{fmtD(r.timeCreate)}</span></TD>
                     <TD right>
-                      {w.status === "PENDING" ? (
-                        <button onClick={() => approve(w)} disabled={!!approving}
+                      {r.status === "PENDING" ? (
+                        <button
+                          onClick={() => requestApprove(r)}
+                          disabled={!!approving || !!confirm}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600
                             disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed
                             text-white text-xs font-semibold rounded-lg transition-colors border border-emerald-600/40">
@@ -457,7 +505,7 @@ function WithdrawTab() {
             </table>
           </div>
           <div className="px-4 py-2.5 border-t border-slate-800/50 bg-slate-900/40">
-            <span className="text-xs text-slate-600">{filtered.length} / {all.length} lệnh</span>
+            <span className="text-xs text-slate-600">{filtered.length} / {merged.length} lệnh</span>
           </div>
         </div>
       )}
@@ -465,18 +513,20 @@ function WithdrawTab() {
   );
 }
 
-// ─── Tab 4: Claim History ──────────────────────────────────────────────────────
-function ClaimsTab() {
-  const [all, setAll] = useState([]);
-  const [q, setQ] = useState("");
+// ─── Tab 4: Daily Reward History ───────────────────────────────────────────────
+function DailyRewardTab() {
+  const [all, setAll]         = useState([]);
+  const [q, setQ]             = useState("");
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(null);
-  const [msg, setMsg] = useState(null);
+  const [msg, setMsg]         = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setAll(await api.get("/claim-history")); }
-    catch { setMsg({ type: "error", msg: "Không thể tải lịch sử claim" }); }
+    try {
+      const data = await api.get("/claim-history");
+      // Chỉ lấy type=DAILY
+      setAll((data || []).filter(c => c.type === "DAILY"));
+    } catch { setMsg({ type: "error", msg: "Không thể tải lịch sử daily reward" }); }
     finally { setLoading(false); }
   }, []);
 
@@ -484,56 +534,23 @@ function ClaimsTab() {
 
   const filtered = all.filter(c => !q || c.walletAddress?.toLowerCase().includes(q.toLowerCase()));
 
-  const approve = async (item) => {
-    if (approving) return;
-    setApproving(item.id); setMsg(null);
-    try {
-      await api.post("/stake/approve-claim", { claimId: item.id });
-      setAll(p => p.map(c => c.id === item.id ? { ...c, status: "COMPLETED" } : c));
-      setMsg({ type: "success", msg: `Đã approve claim #${item.id} thành công!` });
-    } catch (err) { setMsg({ type: "error", msg: `Approve thất bại: ${err.message}` }); }
-    finally { setApproving(null); }
-  };
-
-  const tBadge = (type) => {
-    const m = {
-      DAILY: { l: "Daily Reward", c: "bg-sky-900/40 text-sky-300 border-sky-500/30" },
-      INTERNAL: { l: "Claim Reward", c: "bg-purple-900/40 text-purple-300 border-purple-500/30" },
-      PERSONAL: { l: "Rút về ví", c: "bg-orange-900/40 text-orange-300 border-orange-500/30" },
-    };
-    const s = m[type] || { l: type, c: "bg-slate-800 text-slate-400 border-slate-700" };
-    return <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${s.c}`}>{s.l}</span>;
-  };
-
-  const sBadge = (s) => {
-    const m = { PENDING: "bg-amber-900/50 text-amber-300 border-amber-500/30", COMPLETED: "bg-emerald-900/50 text-emerald-300 border-emerald-500/30", FAILED: "bg-red-900/50 text-red-300 border-red-500/30" };
-    const l = { PENDING: "Pending", COMPLETED: "Completed", FAILED: "Failed" };
-    return <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border ${m[s] || "bg-slate-800 text-slate-500 border-slate-700"}`}>{l[s] || s}</span>;
-  };
-
-  // Chỉ PERSONAL + PENDING mới cần approve (rút từ ví nội bộ ra ví cá nhân)
-  const canApprove = (c) => c.status === "PENDING" && c.type === "PERSONAL";
-
   return (
     <div className="space-y-4">
-      {approving && <ApproveOverlay id={approving} label="claim" />}
       {msg && <Toast type={msg.type} msg={msg.msg} onClose={() => setMsg(null)} />}
-
       <div className="flex gap-3">
         <div className="flex-1"><SearchBar value={q} onChange={setQ} /></div>
-        <ReloadBtn onClick={load} disabled={loading || !!approving} />
+        <ReloadBtn onClick={load} disabled={loading} />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Tổng" value={all.length} color="text-slate-300" />
-        <StatCard label="Pending" value={all.filter(c => c.status === "PENDING").length} color="text-amber-300" />
-        <StatCard label="Completed" value={all.filter(c => c.status === "COMPLETED").length} color="text-emerald-300" />
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard label="Tổng lần trả" value={all.length} color="text-sky-300" />
+        <StatCard label="Wallets" value={new Set(all.map(c => c.walletAddress)).size} color="text-slate-300" />
       </div>
 
       {loading ? (
         <div className="flex items-center gap-2 text-slate-500 py-12"><Spin /><span className="text-sm">Đang tải...</span></div>
       ) : filtered.length === 0 ? (
-        <Empty icon={IC.clock} text="Không tìm thấy lịch sử" sub={q ? "Thử wallet address khác" : "Chưa có lịch sử nào"} />
+        <Empty icon={IC.clock} text="Chưa có lịch sử daily reward" sub={q ? "Thử wallet address khác" : undefined} />
       ) : (
         <div className="rounded-xl border border-slate-700/50 overflow-hidden">
           <div className="overflow-x-auto">
@@ -542,16 +559,15 @@ function ClaimsTab() {
                 <tr className="border-b border-slate-800 bg-slate-900/70">
                   <TH>#</TH>
                   <TH>Wallet Address</TH>
-                  <TH right>Số tiền</TH>
+                  <TH right>Reward</TH>
                   <TH center>Đơn vị</TH>
-                  <TH center>Loại</TH>
-                  <TH center>Trạng thái</TH>
-                  <TH center>Ngày</TH>
+                  <TH center>Ngày trả</TH>
+                  <TH>Ghi chú</TH>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
                 {filtered.map(c => (
-                  <tr key={c.id} className={`transition-colors ${c.status === "PENDING" ? "hover:bg-amber-950/10" : "hover:bg-slate-800/15"}`}>
+                  <tr key={c.id} className="hover:bg-slate-800/15 transition-colors">
                     <TD><span className="text-xs text-slate-600 font-mono">#{c.id}</span></TD>
                     <TD>
                       <div className="flex items-center gap-2">
@@ -562,11 +578,16 @@ function ClaimsTab() {
                         </button>
                       </div>
                     </TD>
-                    <TD right><span className="font-mono font-semibold text-white">{fmt(c.amount)}</span></TD>
+                    <TD right>
+                      <span className="font-mono font-semibold text-emerald-400">+{fmt(c.amount)}</span>
+                    </TD>
                     <TD center><span className="text-xs font-bold text-slate-400">{c.currency}</span></TD>
-                    <TD center>{tBadge(c.type)}</TD>
-                    <TD center>{sBadge(c.status)}</TD>
                     <TD center><span className="text-xs text-slate-500">{fmtD(c.timeCreate)}</span></TD>
+                    <TD>
+                      {c.note && (
+                        <span className="text-xs text-slate-600 block max-w-xs truncate" title={c.note}>{c.note}</span>
+                      )}
+                    </TD>
                   </tr>
                 ))}
               </tbody>
@@ -583,10 +604,10 @@ function ClaimsTab() {
 
 // ─── Root ──────────────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "config", label: "Cấu hình", icon: IC.cfg },
-  { id: "users", label: "Users", icon: IC.users },
-  { id: "withdraw", label: "Withdraw", icon: IC.money },
-  { id: "claims", label: "Claim History", icon: IC.clock },
+  { id: "config",  label: "Cấu hình",      icon: IC.cfg   },
+  { id: "users",   label: "Users",          icon: IC.users },
+  { id: "withdraw",label: "Withdraw",       icon: IC.money },
+  { id: "daily",   label: "Daily Reward",   icon: IC.clock },
 ];
 
 export default function AdminPanel() {
@@ -596,7 +617,6 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-slate-950 text-white font-sans">
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
 
-        {/* Header */}
         <div className="flex items-center gap-3 pb-1">
           <div className="w-9 h-9 rounded-xl bg-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/40">
             <Ico d={IC.money} size={18} />
@@ -607,7 +627,6 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-2xl p-1.5">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
@@ -619,12 +638,11 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        {/* Panel */}
         <div className="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6">
-          {tab === "config" && <ConfigTab />}
-          {tab === "users" && <UsersTab />}
+          {tab === "config"   && <ConfigTab />}
+          {tab === "users"    && <UsersTab />}
           {tab === "withdraw" && <WithdrawTab />}
-          {tab === "claims" && <ClaimsTab />}
+          {tab === "daily"    && <DailyRewardTab />}
         </div>
       </div>
     </div>
