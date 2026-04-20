@@ -35,6 +35,7 @@ const AdminLayout = ({ children }) => {
     // { path: '/admin/commission-settings', label: 'Commission Settings', icon: '⚙️' },
     { path: '/admin/settings', label: 'Settings', icon: '🔧' },
     { path: '/admin/wallet-config', label: 'Wallet Config', icon: '🔐' },
+    { path: '/admin/app-config', label: 'App Config', icon: '⚙️' },
     // { path: '/admin/reset-rebuild', label: 'Reset & Rebuild', icon: '🔄' },
   ];
 

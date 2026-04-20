@@ -11,7 +11,7 @@ function Tokenomics() {
             />
           </div>
           <div className="text-white">
-            <h2 className="text-4xl font-bold mb-6">Tokenomics – novaxisgreen Coin</h2>
+            <h2 className="text-4xl font-bold mb-6">Tokenomics – Novaxisgreen Coin</h2>
             <p className="text-lg font-bold mb-2">Total Supply: 19,000,000 novaxisgreen</p>
             <p className="text-lg font-bold mb-2">
               Burn Rate: 45% → Circulating Supply: 10.45M novaxisgreen

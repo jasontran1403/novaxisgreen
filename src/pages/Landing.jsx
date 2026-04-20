@@ -11,6 +11,8 @@ import RevenueStreams from '../components/landing/RevenueStreams';
 import Roadmap from '../components/landing/Roadmap';
 import Tokenomics from '../components/landing/Tokenomics';
 import VisionMission from '../components/landing/VisionMission';
+import NovaxisWalletApp from '../components/landing/NovaxisWalletApp';
+
 
 function Landing() {
   useEffect(() => {
@@ -85,6 +87,7 @@ function Landing() {
       <LandingNavbar />
       <HeroSection />
       <VisionMission />
+      <NovaxisWalletApp />
       <GreenEnergyStory />
       <Ecosystem />
       <NovaxisChain />

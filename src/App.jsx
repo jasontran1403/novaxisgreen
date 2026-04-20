@@ -30,6 +30,7 @@ import CommissionSettings from './pages/admin/CommissionSettings'
 import Settings from './pages/admin/Settings'
 import ResetRebuild from './pages/admin/ResetRebuild'
 import WalletConfig from './pages/admin/WalletConfig'
+import AppConfig from './pages/admin/AppConfig'
 import WithdrawManagement from './pages/admin/WithdrawManagement'
 import { ToastProvider } from './contexts/ToastProvider'
 import InvestmentManagement from './pages/admin/InvestmentManagement'
@@ -344,6 +345,16 @@ function App() {
                 <AdminRoute>
                   <AdminLayout>
                     <WalletConfig />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/app-config"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <AppConfig />
                   </AdminLayout>
                 </AdminRoute>
               }
